@@ -47,3 +47,36 @@ provider "google-beta" {
   request_timeout = "60s"
 }
 
+
+# BigQuery Core (it's module)
+  # landing dataset
+  # curated dataset
+  # consumption dataset
+
+  # One sample table with it's schema, with partition and clustering  (schema: customer_name, customer_birth_date)
+  # The same sample table for the curated zone with extra metadata columns (schema: meta_data.source_system, customer_name, customer_birth_date)
+  # sample 1:1 view in the consumption dataset with view definition in a template file
+
+# BigQuery Consumption
+  # A module that could be invoked N times depending on the number of consumers
+  # We should have a list of Consumers (with their requied attributes) that we automate the creation of their reporting envs for
+  # For now the module should create a reporting dataset with the consumer name and add a resource label to it (e.g. owner="team name")
+  # Grant the team emails R/W access on the created dataset(s)
+  # [{"team": "bla", "groups": ["bla@customer.com"]}, {"team": "xyz", "groups": ["xyz@customer.com"}]]
+
+# Data Catalog
+  # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/data_catalog_tag_template
+  # Tag template with sample business metadata fields. Maybe show case different types of fields (strings, lists/enums, etc)
+
+# Composer
+  # Create a cluster
+
+# Spanner
+  # Create an instance of Spanner
+  # Sample schema
+
+# IAM
+  # Service account for dataflow
+  # Service account for Composer
+  # Access for these SAs (to BQ, GCS, Dataflow)
+  # (Postpone for now) row level access on BigQuery
