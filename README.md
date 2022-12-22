@@ -1,12 +1,17 @@
 # erste-digital-poc
 Google PSO POC project for Erste Digital - for internal collaboration
 
+# Project
+```shell
+domain: wadie.joonix.net
 
+project: pso-erste-digital-sandbox
+```
 # Terraform
 
 #### Set Variables
 ```shell
-export PROJECT_ID=
+export PROJECT_ID=pso-erste-digital-sandbox
 export COMPUTE_REGION=
 export ACCOUNT=<current user account email>
 expoert BUCKET=<terraform state bucket>
