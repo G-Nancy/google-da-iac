@@ -6,6 +6,14 @@ variable "region" {
   type = string
 }
 
-variable "dataset" {
+variable "lz_dataset" {
+  type = string
+}
+
+variable "cr_dataset" {
+  type = string
+}
+
+variable "cm_dataset" {
   type = string
 }

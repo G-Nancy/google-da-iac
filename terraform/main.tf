@@ -47,6 +47,31 @@ provider "google-beta" {
   request_timeout = "60s"
 }
 
+locals {
+  common_cloud_run_variables = [
+    {
+      name = "PROJECT_ID",
+      value = var.project,
+    },
+    {
+      name = "COMPUTE_REGION_ID",
+      value = var.compute_region,
+    },
+    {
+      name = "DATA_REGION_ID",
+      value = var.data_region,
+    }
+  ]
+}
+
+module "bigquery" {
+  source = "./modules/bigquery-core"
+  project = var.project
+  region = var.data_region
+  lz_dataset = var.bq_landing_dataset_name
+  cr_dataset = var.bq_curated_dataset_name
+  cm_dataset = var.bq_consumption_dataset_name
+}
 
 # BigQuery Core (it's module)
   # landing dataset

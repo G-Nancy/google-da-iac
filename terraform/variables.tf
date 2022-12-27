@@ -27,6 +27,20 @@ variable "terraform_service_account" {
   type = string
 }
 
+variable "bq_landing_dataset_name" {
+  type = string
+  default = "bq_landing"
+}
+
+variable "bq_curated_dataset_name" {
+  type = string
+  default = "bq_curated"
+}
+
+variable "bq_consumption_dataset_name" {
+  type = string
+  default = "bq_consumption"
+}
 
 
 
