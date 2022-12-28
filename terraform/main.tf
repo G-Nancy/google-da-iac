@@ -71,7 +71,11 @@ module "bigquery" {
   lz_dataset = var.bq_landing_dataset_name
   cr_dataset = var.bq_curated_dataset_name
   cm_dataset = var.bq_consumption_dataset_name
+  lz_tables           = var.bq_lz_tables
+  table_dataset_labels             = var.lz_dataset_labels
+  view_dataset_labels =var.view_dataset_labels
 }
+
 
 # BigQuery Core (it's module)
   # landing dataset

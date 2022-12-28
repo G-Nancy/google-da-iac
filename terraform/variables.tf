@@ -42,5 +42,40 @@ variable "bq_consumption_dataset_name" {
   default = "bq_consumption"
 }
 
+variable "lz_dataset_labels" {
+  description = "A mapping of labels to assign to the table."
+  type        = map(string)
+}
+
+variable "view_dataset_labels" {
+  description = "A mapping of labels to assign to the table."
+  type        = map(string)
+}
+
+variable "bq_lz_tables" {
+  description = "A list of maps that includes table_id, schema, clustering, time_partitioning, range_partitioning, view, expiration_time, labels in each element."
+  default     = []
+  type = list(object({
+    table_id   = string,
+    schema     = string,
+    clustering = list(string),
+    time_partitioning = object({
+      expiration_ms            = string,
+      field                    = string,
+      type                     = string,
+      require_partition_filter = bool,
+    }),
+    range_partitioning = object({
+      field = string,
+      range = object({
+        start    = string,
+        end      = string,
+        interval = string,
+      }),
+    }),
+    expiration_time = string,
+    labels          = map(string),
+  }))
+}
 
 
