@@ -1,0 +1,26 @@
+[
+  {
+    "name": "customer_name",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Name of the Customer"
+  },
+  {
+    "name": "customer_birth_date",
+    "type": "DATE",
+    "mode": "NULLABLE",
+    "description": "Date of birth of the customer"
+  },
+  {
+    "name": "country",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Name of the customer's country"
+  },
+  {
+    "name": "account_type",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Account type for Customer - Saving or Current"
+  }
+]
