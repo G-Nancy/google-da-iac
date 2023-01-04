@@ -1,0 +1,16 @@
+{
+  "name": "BatchE",
+  "description": "Sample Beam batch pipeline for counting words",
+  "parameters": [
+    {
+      "name": "inputTable",
+      "label": "inputTable",
+      "helpText": "BigQuery table to read from in the format project.dataset.table"
+    },
+    {
+      "name": "outputTable",
+      "label": "inputTable",
+      "helpText": "BigQuery table to write to in teh format project:dataset.table"
+    }
+  ]
+}

@@ -39,3 +39,11 @@ Terraform needs to run with a service account to deploy DLP resources. User acco
 ```shell
 ./scripts/deploy_terraform.sh
 ```
+
+#### Notes
+
+* We're using the default VPC
+* To use dataflow with private IPs one must enable Google Private Access on the subnetwork. This is done manually (https://cloud.google.com/vpc/docs/configure-private-google-access#console_2) in the POC
+project on europe-west3 subnetwork in the default VPC. Dataflow job must be submitted to region europe-west3 in that case.
+* On the actual project, a shared VPC is expected and the subnetwork has to enable Google Private Access. Dataflow jobs are then submitted
+ to the desired subnetwork via the --subnetwork param
