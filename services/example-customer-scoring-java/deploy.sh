@@ -24,7 +24,6 @@ gcloud run deploy example-customer-scoring-java \
 --region=${REGION} \
 --service-account=${CUSTOMER_SCORING_SA_EMAIL} \
 --set-env-vars="MIN_SCORE=0,MAX_SCORE=10" \
---allow-unauthenticated
-#--no-allow-unauthenticated \
-#--ingress="internal"
+--no-allow-unauthenticated \
+--ingress="internal"
 

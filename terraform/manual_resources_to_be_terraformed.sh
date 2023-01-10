@@ -1,5 +1,5 @@
 
-PROJECT_ID=pso-erste-digital-sandbox
+PROJECT=pso-erste-digital-sandbox
 
 gcloud artifacts repositories create dataplatform \
     --repository-format=docker \
@@ -38,16 +38,16 @@ gcloud iam service-accounts create dataflow-temp \
     --description="temp dataflow workers SA until terraformed" \
     --display-name="dataflow-temp"
 
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+gcloud projects add-iam-policy-binding ${PROJECT} \
     --member="serviceAccount:dataflow-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
     --role="roles/dataflow.admin"
 
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+gcloud projects add-iam-policy-binding ${PROJECT} \
     --member="serviceAccount:dataflow-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
     --role="roles/dataflow.worker"
 
 # to read flex template files from GCS and read-write files
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+gcloud projects add-iam-policy-binding ${PROJECT} \
     --member="serviceAccount:dataflow-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
     --role="roles/storage.admin"
 
@@ -73,19 +73,24 @@ gcloud iam service-accounts add-iam-policy-binding \
     --member="serviceAccount:service-634617552237@dataflow-service-producer-prod.iam.gserviceaccount.com" \
     --role=roles/iam.serviceAccountUser
 
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+gcloud projects add-iam-policy-binding ${PROJECT} \
     --member="serviceAccount:dataflow-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
     --role="roles/artifactregistry.reader"
 
     # to create bigquery load/query jobs
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+gcloud projects add-iam-policy-binding ${PROJECT} \
     --member="serviceAccount:dataflow-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
     --role="roles/bigquery.jobUser"
 
     # to create tables and load data
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+gcloud projects add-iam-policy-binding ${PROJECT} \
     --member="serviceAccount:dataflow-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
     --role="roles/bigquery.dataEditor"
+
+    # to invoke cloud run
+gcloud projects add-iam-policy-binding ${PROJECT} \
+    --member="serviceAccount:dataflow-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
+    --role="roles/run.invoker"
 
 ######  Composer service account
 
@@ -93,28 +98,28 @@ gcloud iam service-accounts create composer-temp \
     --description="temp composer SA until terraformed" \
     --display-name="composer-temp"
 
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+gcloud projects add-iam-policy-binding ${PROJECT} \
     --member="serviceAccount:composer-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
     --role="roles/composer.worker"
 
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+gcloud projects add-iam-policy-binding ${PROJECT} \
     --member="serviceAccount:composer-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
     --role="roles/iam.serviceAccountUser"
 
     # to create bigquery load/query jobs
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+gcloud projects add-iam-policy-binding ${PROJECT} \
     --member="serviceAccount:composer-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
     --role="roles/bigquery.jobUser"
 
     # to create tables and load data
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+gcloud projects add-iam-policy-binding ${PROJECT} \
     --member="serviceAccount:composer-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
     --role="roles/bigquery.dataEditor"
 
 
 
     # to submit dataflow jobs
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+gcloud projects add-iam-policy-binding ${PROJECT} \
     --member="serviceAccount:composer-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
     --role="roles/dataflow.admin"
 

@@ -3,6 +3,7 @@ package com.google.cloud.pso.model;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.common.base.Objects;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.DefaultCoder;
 
@@ -57,7 +58,11 @@ public class Customer implements Serializable {
     }
 
     public String toJsonString(){
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder()
+                .setPrettyPrinting()
+                .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
+                .create();
+
         return gson.toJson(this);
     }
 

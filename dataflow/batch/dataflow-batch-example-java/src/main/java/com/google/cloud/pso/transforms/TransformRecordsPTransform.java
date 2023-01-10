@@ -66,6 +66,9 @@ public class TransformRecordsPTransform
         // how to reference one tagged output from the PCollectionTuple
         //PCollection<CustomerWithScore> customersWithScores = customersWithScoresTuple.get(successOutput);
     }
+
+
+
 }
 
 
