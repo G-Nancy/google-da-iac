@@ -9,8 +9,18 @@
     },
     {
       "name": "outputTable",
-      "label": "inputTable",
-      "helpText": "BigQuery table to write to in teh format project:dataset.table"
+      "label": "outputTable",
+      "helpText": "BigQuery table to write to in the format project:dataset.table"
+    },
+    {
+      "name": "errorTable",
+      "label": "errorTable",
+      "helpText": "BigQuery table to write errors to in the format project:dataset.table"
+    },
+    {
+      "name": "customerScoringServiceUrl",
+      "label": "customerScoringServiceUrl",
+      "helpText": "Endpoint for Customer Scoring service"
     }
   ]
 }

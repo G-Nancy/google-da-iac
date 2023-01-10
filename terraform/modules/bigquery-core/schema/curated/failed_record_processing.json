@@ -1,0 +1,22 @@
+[
+  {
+    "name": "record_content",
+    "type": "STRING"
+  },
+  {
+    "name": "error",
+    "type": "STRING"
+  },
+  {
+    "name": "exception_name",
+    "type": "STRING"
+  },
+  {
+    "name": "run_id",
+    "type": "STRING"
+  },
+  {
+    "name": "failed_component",
+    "type": "STRING"
+  }
+]

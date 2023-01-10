@@ -17,191 +17,54 @@
  */
 package com.google.cloud.pso;
 
-import com.google.api.services.bigquery.model.TableRow;
+import com.google.cloud.pso.model.BatchExampleOptions;
+import com.google.cloud.pso.model.Customer;
+import com.google.cloud.pso.model.CustomerWithScore;
+import com.google.cloud.pso.model.FailedRecord;
+import com.google.cloud.pso.transforms.ExtractRecordsPTransform;
+import com.google.cloud.pso.transforms.LoadFailedRecordsPTransform;
+import com.google.cloud.pso.transforms.LoadSuccessRecordsPTransform;
+import com.google.cloud.pso.transforms.TransformRecordsPTransform;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
-import org.apache.beam.sdk.options.Description;
-import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.options.Validation.Required;
-import org.apache.beam.sdk.transforms.*;
-import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PDone;
-import org.apache.beam.sdk.values.TypeDescriptor;
-
-import java.util.Random;
+import org.apache.beam.sdk.values.PCollectionTuple;
 
 public class BatchExamplePipeline {
 
+    static void run(BatchExampleOptions options) {
 
-
-    // "E" in ETL
-    public static class ExtractRecords
-            extends PTransform<PBegin, PCollection<Customer>> {
-
-        private BatchExampleOptions options;
-        public ExtractRecords(BatchExampleOptions options){
-            this.options = options;
-        }
-
-        @Override
-        public PCollection<Customer> expand(PBegin p) {
-
-            PCollection<TableRow> tableRowsPC = p.apply(
-                    "Read from BigQuery query",
-                    BigQueryIO.readTableRows()
-                            .fromQuery(String.format("SELECT id, first_name, last_name, date_of_birth, address FROM `%s`", options.getInputTable()))
-                            .usingStandardSql());
-
-            PCollection<Customer> customerPC = tableRowsPC.apply(
-                    "TableRows to Customer",
-                    MapElements.into(TypeDescriptor.of(Customer.class)).via(Customer::fromTableRow));
-
-            return customerPC;
-        }
-    }
-
-    // "T" in ETL
-    public static class TransformRecords
-            extends PTransform<PCollection<Customer>, PCollection<CustomerWithScore>> {
-        @Override
-        public PCollection<CustomerWithScore> expand(PCollection<Customer> customers) {
-
-            // 1. Validate and filter out invalid customers
-            // 2. Convert LastName to Upper Case
-            PCollection<Customer> processedCustomers = customers.apply(ParDo.of(new ValidateCustomerDoFn()))
-                    .apply(MapElements.via(new UpperCaseLastNameSimpleFunction()));
-
-            PCollection<CustomerWithScore> customersWithScores = processedCustomers.apply(ParDo.of(new CalculateCustomerScore()));
-
-            return customersWithScores;
-        }
-    }
-
-    // "L" in ETL
-    public static class LoadRecords
-            extends PTransform<PCollection<CustomerWithScore>, PDone> {
-
-        private BatchExampleOptions options;
-        public LoadRecords(BatchExampleOptions options){
-            this.options = options;
-        }
-
-        @Override
-        public PDone expand(PCollection<CustomerWithScore> customersWithScore) {
-
-            customersWithScore
-                    // convert the Java object to TableRow
-                    .apply(MapElements.into(TypeDescriptor.of(TableRow.class)).via(CustomerWithScore::toTableRow))
-                    // insert the TableRow to BigQuery
-                    .apply(
-                    "Write to BigQuery",
-                    BigQueryIO.writeTableRows()
-                            .to(options.getOutputTable())
-                            .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_NEVER)
-                            .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
-
-            return PDone.in(customersWithScore.getPipeline());
-        }
-    }
-
-    static class ValidateCustomerDoFn extends DoFn<Customer, Customer> {
-        private final Counter invalidCustomersCount = Metrics.counter(ValidateCustomerDoFn.class, "invalidCustomersCount");
-
-        @ProcessElement
-        public void processElement(@Element Customer element, OutputReceiver<Customer> receiver) {
-
-            // This is a naive validation logic to demonstrate functionality
-            if(element.getFirstName().startsWith("A")){
-                invalidCustomersCount.inc();
-            }else{
-
-                // multiple elements could be added to the output if needed (1-to-many)
-                receiver.output(element);
-            }
-        }
-    }
-
-    public static class UpperCaseLastNameSimpleFunction extends SimpleFunction<Customer, Customer> {
-
-        @Override
-        public Customer apply(Customer input) {
-            // randomly generate scores from 1 to 10
-            return new Customer(
-                    input.getId(),
-                    input.getFirstName(),
-                    input.getLastName().toUpperCase(),
-                    input.getDateOfBirth(),
-                    input.getAddress()
-            );
-        }
-    }
-
-    public static class CalculateCustomerScore extends DoFn<Customer, CustomerWithScore> {
-
-        private Random randomGenerator;
-
-        /*
-        Use setup function to initialize the DoFn on each worker
-         */
-        @Setup
-        public void setup(){
-            randomGenerator=new Random();
-        }
-
-        @ProcessElement
-        public void processElement(@Element Customer element, OutputReceiver<CustomerWithScore> receiver) {
-            // randomly generate scores from 1 to 10
-            receiver.output(new CustomerWithScore(element, randomGenerator.nextInt(10)+1));
-        }
-    }
-
-
-
-
-    /**
-     * Options supported by {@link BatchExamplePipeline}.
-     *
-     * <p>Concept #4: Defining your own configuration options. Here, you can add your own arguments to
-     * be processed by the command-line parser, and specify default values for them. You can then
-     * access the options values in your pipeline code.
-     *
-     * <p>Inherits standard configuration options.
-     */
-    public interface BatchExampleOptions extends PipelineOptions {
-
-        @Description("BigQuery table to read from")
-        @Required
-        String getInputTable();
-
-        void setInputTable(String value);
-
-        @Description("BigQuery table to write to")
-        @Required
-        String getOutputTable();
-
-        void setOutputTable(String value);
-    }
-
-    static void runBatchExample(BatchExampleOptions options) {
         Pipeline p = Pipeline.create(options);
 
-        // Concepts #2 and #3: Our pipeline applies the composite CountWords transform, and passes the
-        // static FormatAsTextFn() to the ParDo transform.
-        p.apply("Extract", new ExtractRecords(options))
-                .apply("Transform", new TransformRecords())
-                .apply("Load", new LoadRecords(options));
+        PCollection<Customer> extractedCustomers = p.
+                apply("Extract",
+                new ExtractRecordsPTransform(options.getInputTable()));
+
+        PCollectionTuple transformedCustomers = extractedCustomers
+                .apply("Transform", new TransformRecordsPTransform(
+                        options.getCustomerScoringServiceUrl(),
+                        options.getJobName()
+                        ));
+
+        // here we load into two tables: success and error
+        PCollection<CustomerWithScore> customersWithScore = transformedCustomers
+                .get(TransformRecordsPTransform.successOutput);
+
+        customersWithScore.apply("Load Success Records", new LoadSuccessRecordsPTransform(options.getOutputTable()));
+
+        PCollection<FailedRecord> customersWithErrors = transformedCustomers
+                .get(TransformRecordsPTransform.errorOutput);
+
+        customersWithErrors.apply("Load Error Records", new LoadFailedRecordsPTransform(options.getErrorTable()));
 
         p.run();
     }
 
     public static void main(String[] args) {
+
         BatchExampleOptions options =
                 PipelineOptionsFactory.fromArgs(args).withValidation().as(BatchExampleOptions.class);
 
-        runBatchExample(options);
+        run(options);
     }
 }
