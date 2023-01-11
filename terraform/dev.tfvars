@@ -33,3 +33,55 @@ bq_lz_tables = [
     },
   }
 ]
+
+bq_bi_dataset = {
+  bq_team1_dataset ={
+    region  = "europe-west1"
+    labels = {
+      owner="team1"
+    }
+    description = "Team 1 specific dataset"
+    domain_reader = "goyalclouds.com"
+    owner = "gnancy@google.com"
+    description = "Team 1 specific dataset"
+  }
+  bq_team2_dataset ={
+    region  = "europe-west1"
+    labels = {
+      owner="karim" #Only lowercase char
+    }
+    description = "Team 2 specific dataset"
+    domain_reader = "goyalclouds.com"
+    owner = "wadie@google.com"
+    description = "Team 2 specific dataset"
+  }
+
+}
+#
+#domain_mapping = [
+#  {
+#    project = "pso-erste-digital-sandbox",
+#    domain = "consumer",
+#    datasets = [] // leave empty if no dataset overrides is required for this project
+#  },
+#  {
+#    project = "pso-erste-digital-sandbox",
+#    domain = "digital",
+#    datasets = [
+#      {
+#        name = "erste_bq_landing",
+#        domain = "landing"
+#      },
+#      {
+#        name = "erste_bq_curated",
+#        domain = "curated"
+#      },
+#      {
+#        name = "erste_bq_consumption",
+#        domain = "consumption"
+#      },
+#    ]
+#  }
+#]
+#
+#activated_policy_types = ["FINE_GRAINED_ACCESS_CONTROL"]

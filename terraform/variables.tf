@@ -78,4 +78,35 @@ variable "bq_lz_tables" {
   }))
 }
 
+variable "bq_bi_dataset" {
+  description = "The attributes for creating BI team datasets"
+  type = map(object({
+    region = string,
+    description = string,
+    domain_reader = string,
+    owner = string,
+    labels = map(string)
+  },))
+  default = {}
+}
+
+##Data Catalog Variables
+#variable "activated_policy_types" {
+#  description = "A list of policy types that are activated for this taxonomy."
+#  type        = list(string)
+#  default     = []
+#}
+#
+#variable "domain_mapping" {
+#  type = list(object({
+#    project = string,
+#    domain = string,
+#    datasets = list(object({
+#      name = string,
+#      domain = string
+#    })) // leave empty if no dataset overrides is required for this project
+#  }))
+#  description = "Mapping between domains and GCP projects or BQ Datasets. Dataset-level mapping will overwrite project-level mapping for a given project."
+#}
+
 

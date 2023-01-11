@@ -47,22 +47,25 @@ provider "google-beta" {
   request_timeout = "60s"
 }
 
-locals {
-  common_cloud_run_variables = [
-    {
-      name = "PROJECT_ID",
-      value = var.project,
-    },
-    {
-      name = "COMPUTE_REGION_ID",
-      value = var.compute_region,
-    },
-    {
-      name = "DATA_REGION_ID",
-      value = var.data_region,
-    }
-  ]
-}
+#locals {
+#  common_cloud_run_variables = [
+#    {
+#      name = "PROJECT_ID",
+#      value = var.project,
+#    },
+#    {
+#      name = "COMPUTE_REGION_ID",
+#      value = var.compute_region,
+#    },
+#    {
+#      name = "DATA_REGION_ID",
+#      value = var.data_region,
+#    }
+#  ]
+#
+#  # Only projects with configured domains
+#  domains = distinct([for entry in var.domain_mapping: entry if lookup(entry, "domain") != ""])
+#}
 
 module "bigquery" {
   source = "./modules/bigquery-core"
@@ -74,7 +77,17 @@ module "bigquery" {
   lz_tables           = var.bq_lz_tables
   table_dataset_labels             = var.lz_dataset_labels
   view_dataset_labels =var.view_dataset_labels
+  bq_bi_dataset = var.bq_bi_dataset
 }
+
+#module "data-catalog" {
+##  count = length(local.domains)
+#  source = "./modules/data-catalog"
+#  project = var.project
+#  region = var.data_region
+##  domain = local.domains[count.index]
+##  activated_policy_types = var.activated_policy_types
+#}
 
 
 # BigQuery Core (it's module)
