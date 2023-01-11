@@ -53,3 +53,15 @@ variable "lz_tables" {
     labels          = map(string),
   }))
 }
+
+variable "bq_bi_dataset" {
+  description = "The attributes for creating BI team datasets"
+  type = map(object({
+    region = string,
+    description = string,
+    domain_reader = string,
+    owner = string,
+    labels = map(string)
+  },))
+  default = {}
+}

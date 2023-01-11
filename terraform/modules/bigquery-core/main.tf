@@ -98,3 +98,27 @@ resource "google_bigquery_table" "view_consumption_customer" {
     )
   }
 }
+
+#####Team specific datasets#########################
+resource "google_bigquery_dataset" "bi_dataset" {
+  for_each = var.bq_bi_dataset
+  project = var.project
+  dataset_id = each.key
+  location = each.value["region"]
+  description = each.value["description"]
+  labels = each.value["labels"]
+  access {
+    role          = "OWNER"
+    user_by_email = each.value["owner"]
+  }
+
+  access {
+    role   = "READER"
+    domain = each.value["domain_reader"]
+  }
+}
+
+#project = var.project
+#location = var.region
+#dataset_id = var.cr_dataset
+#description = "To store curated layer data in BigQuery"
