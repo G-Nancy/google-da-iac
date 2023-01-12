@@ -33,6 +33,8 @@ bq_customer_stg_table = f'{project}.erste_bq_landing.customer_stg'
 bq_customer_history_table = f'{project}.erste_bq_curated.customer'
 # bq table where we keep history of all customers after updating them with the new batch
 bq_customer_score_table = f'{project}.erste_bq_curated.customer_score'
+bq_error_table = f'{project}.erste_bq_curated.failed_customer_processing'
+customer_scoring_url = os.environ.get('customer_scoring_url')
 
 default_args = {
     'start_date': days_ago(2),
@@ -133,6 +135,8 @@ calculate_scores_dataflow = DataflowStartFlexTemplateOperator(
             "parameters": {
                 "inputTable": bq_customer_history_table,
                 "outputTable": bq_customer_score_table,
+                "errorTable": bq_error_table,
+                "customerScoringServiceUrl": customer_scoring_url,
                 # number_of_worker_harness_threads is a fine-tuning param that could be added to the template params. One could use less worker nodes by optimizing it
                 # "number_of_worker_harness_threads": "32"
             },
