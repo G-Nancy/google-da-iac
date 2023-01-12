@@ -1,0 +1,26 @@
+[
+  {
+    "name": "id",
+    "type": "INTEGER"
+  },
+  {
+    "name": "first_name",
+    "type": "STRING"
+  },
+  {
+    "name": "last_name",
+    "type": "STRING"
+  },
+  {
+    "name": "last_name",
+    "type": "STRING"
+  },
+  {
+    "name": "date_of_birth",
+    "type": "DATETIME"
+  },
+  {
+    "name": "address",
+    "type": "STRING"
+  }
+]
