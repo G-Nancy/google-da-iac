@@ -1,7 +1,6 @@
 # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigquery_table
 # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigquery_dataset
 
-
 ######## Datasets ##############################################################
 
 resource "google_bigquery_dataset" "landing_zone_dataset" {
@@ -117,8 +116,3 @@ resource "google_bigquery_dataset" "bi_dataset" {
     domain = each.value["domain_reader"]
   }
 }
-
-#project = var.project
-#location = var.region
-#dataset_id = var.cr_dataset
-#description = "To store curated layer data in BigQuery"

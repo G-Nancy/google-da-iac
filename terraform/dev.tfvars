@@ -57,7 +57,20 @@ bq_bi_dataset = {
   }
 
 }
-#
+
+####spanner variables#############
+spanner_instance = "e-spanner-main"
+
+spanner_node_count = 1
+
+spanner_db_retention_days = "1d"
+
+spanner_labels = {
+  env      = "dev"
+  billable = "true"
+  owner    = "e-digital"
+}
+
 #domain_mapping = [
 #  {
 #    project = "pso-erste-digital-sandbox",

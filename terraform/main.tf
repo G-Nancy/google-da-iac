@@ -47,7 +47,7 @@ provider "google-beta" {
   request_timeout = "60s"
 }
 
-#locals {
+locals {
 #  common_cloud_run_variables = [
 #    {
 #      name = "PROJECT_ID",
@@ -65,7 +65,7 @@ provider "google-beta" {
 #
 #  # Only projects with configured domains
 #  domains = distinct([for entry in var.domain_mapping: entry if lookup(entry, "domain") != ""])
-#}
+}
 
 module "bigquery" {
   source = "./modules/bigquery-core"
@@ -74,10 +74,20 @@ module "bigquery" {
   lz_dataset = var.bq_landing_dataset_name
   cr_dataset = var.bq_curated_dataset_name
   cm_dataset = var.bq_consumption_dataset_name
-  lz_tables           = var.bq_lz_tables
-  table_dataset_labels             = var.lz_dataset_labels
+  lz_tables = var.bq_lz_tables
+  table_dataset_labels = var.lz_dataset_labels
   view_dataset_labels =var.view_dataset_labels
   bq_bi_dataset = var.bq_bi_dataset
+}
+
+module "spanner" {
+  source = "./modules/spanner"
+  project = var.project
+  region = var.compute_region
+  spanner_instance = var.spanner_instance
+  spanner_node_count = var.spanner_node_count
+  spanner_db_retention_days = var.spanner_db_retention_days
+  spanner_labels = var.spanner_labels
 }
 
 #module "data-catalog" {

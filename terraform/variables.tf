@@ -90,7 +90,27 @@ variable "bq_bi_dataset" {
   default = {}
 }
 
-##Data Catalog Variables
+############spanner variables###############
+variable "spanner_instance" {
+  type = string
+}
+
+variable "spanner_node_count" {
+  type = number
+}
+
+variable "spanner_db_retention_days" {
+  type = string
+  default = "2d"
+}
+
+variable "spanner_labels" {
+  description = "A mapping of labels to assign to the spanner instance."
+  type        = map(string)
+}
+
+
+## Data Catalog Variables
 #variable "activated_policy_types" {
 #  description = "A list of policy types that are activated for this taxonomy."
 #  type        = list(string)

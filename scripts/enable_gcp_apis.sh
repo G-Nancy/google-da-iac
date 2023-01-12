@@ -40,3 +40,6 @@ gcloud services enable run.googleapis.com
 
 echo "enabling compute .."
 gcloud services enable compute.googleapis.com
+
+echo "enabling spanner .."
+gcloud services enable spanner.googleapis.com
