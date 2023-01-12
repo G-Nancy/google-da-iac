@@ -27,6 +27,86 @@ variable "terraform_service_account" {
   type = string
 }
 
+variable "bq_landing_dataset_name" {
+  type = string
+  default = "bq_landing"
+}
 
+variable "bq_curated_dataset_name" {
+  type = string
+  default = "bq_curated"
+}
+
+variable "bq_consumption_dataset_name" {
+  type = string
+  default = "bq_consumption"
+}
+
+variable "lz_dataset_labels" {
+  description = "A mapping of labels to assign to the table."
+  type        = map(string)
+}
+
+variable "view_dataset_labels" {
+  description = "A mapping of labels to assign to the table."
+  type        = map(string)
+}
+
+variable "bq_lz_tables" {
+  description = "A list of maps that includes table_id, schema, clustering, time_partitioning, range_partitioning, view, expiration_time, labels in each element."
+  default     = []
+  type = list(object({
+    table_id   = string,
+    schema     = string,
+    clustering = list(string),
+    time_partitioning = object({
+      expiration_ms            = string,
+      field                    = string,
+      type                     = string,
+      require_partition_filter = bool,
+    }),
+    range_partitioning = object({
+      field = string,
+      range = object({
+        start    = string,
+        end      = string,
+        interval = string,
+      }),
+    }),
+    expiration_time = string,
+    labels          = map(string),
+  }))
+}
+
+variable "bq_bi_dataset" {
+  description = "The attributes for creating BI team datasets"
+  type = map(object({
+    region = string,
+    description = string,
+    domain_reader = string,
+    owner = string,
+    labels = map(string)
+  },))
+  default = {}
+}
+
+##Data Catalog Variables
+#variable "activated_policy_types" {
+#  description = "A list of policy types that are activated for this taxonomy."
+#  type        = list(string)
+#  default     = []
+#}
+#
+#variable "domain_mapping" {
+#  type = list(object({
+#    project = string,
+#    domain = string,
+#    datasets = list(object({
+#      name = string,
+#      domain = string
+#    })) // leave empty if no dataset overrides is required for this project
+#  }))
+#  description = "Mapping between domains and GCP projects or BQ Datasets. Dataset-level mapping will overwrite project-level mapping for a given project."
+#}
 
 
