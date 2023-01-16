@@ -5,32 +5,32 @@ gcloud artifacts repositories create dataplatform \
     --repository-format=docker \
     --location=europe-west3
 
-gcloud storage buckets create gs://pso-erste-digital-sandbox-dataflow --location=europe-west3
-
-gcloud storage buckets create gs://pso-erste-digital-sandbox-data --location=europe-west3
+#gcloud storage buckets create gs://pso-erste-digital-sandbox-dataflow --location=europe-west3
+#
+#gcloud storage buckets create gs://pso-erste-digital-sandbox-data --location=europe-west3
 
 
 ###### Tables
 
-bq mk \
---table \
-pso-erste-digital-sandbox:erste_bq_landing.customer_stg \
-modules/bigquery-core/schema/landing/customer_stg.json
+#bq mk \
+#--table \
+#pso-erste-digital-sandbox:erste_bq_landing.customer_stg \
+#modules/bigquery-core/schema/landing/customer_stg.json
 
-bq mk \
---table \
-pso-erste-digital-sandbox:erste_bq_curated.customer \
-modules/bigquery-core/schema/curated/customer.json
-
-bq mk \
---table \
-pso-erste-digital-sandbox:erste_bq_curated.customer_score \
-modules/bigquery-core/schema/curated/customer_score.json
-
-bq mk \
---table \
-pso-erste-digital-sandbox:erste_bq_curated.failed_customer_processing \
-modules/bigquery-core/schema/curated/failed_record_processing.json
+#bq mk \
+#--table \
+#pso-erste-digital-sandbox:erste_bq_curated.customer \
+#modules/bigquery-core/schema/curated/customer.json
+#
+#bq mk \
+#--table \
+#pso-erste-digital-sandbox:erste_bq_curated.customer_score \
+#modules/bigquery-core/schema/curated/customer_score.json
+#
+#bq mk \
+#--table \
+#pso-erste-digital-sandbox:erste_bq_curated.failed_customer_processing \
+#modules/bigquery-core/schema/curated/failed_record_processing.json
 
 ######  Dataflow worker service account
 
@@ -92,37 +92,35 @@ gcloud projects add-iam-policy-binding ${PROJECT} \
     --member="serviceAccount:dataflow-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
     --role="roles/run.invoker"
 
-######  Composer service account
-
-gcloud iam service-accounts create composer-temp \
-    --description="temp composer SA until terraformed" \
-    --display-name="composer-temp"
-
-gcloud projects add-iam-policy-binding ${PROJECT} \
-    --member="serviceAccount:composer-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
-    --role="roles/composer.worker"
-
-gcloud projects add-iam-policy-binding ${PROJECT} \
-    --member="serviceAccount:composer-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
-    --role="roles/iam.serviceAccountUser"
-
-    # to create bigquery load/query jobs
-gcloud projects add-iam-policy-binding ${PROJECT} \
-    --member="serviceAccount:composer-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
-    --role="roles/bigquery.jobUser"
-
-    # to create tables and load data
-gcloud projects add-iam-policy-binding ${PROJECT} \
-    --member="serviceAccount:composer-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
-    --role="roles/bigquery.dataEditor"
-
-
-
-    # to submit dataflow jobs
-gcloud projects add-iam-policy-binding ${PROJECT} \
-    --member="serviceAccount:composer-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
-    --role="roles/dataflow.admin"
-
+#######  Composer service account
+#
+#gcloud iam service-accounts create composer-temp \
+#    --description="temp composer SA until terraformed" \
+#    --display-name="composer-temp"
+#
+#gcloud projects add-iam-policy-binding ${PROJECT} \
+#    --member="serviceAccount:composer-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
+#    --role="roles/composer.worker"
+#
+#gcloud projects add-iam-policy-binding ${PROJECT} \
+#    --member="serviceAccount:composer-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
+#    --role="roles/iam.serviceAccountUser"
+#
+#    # to create bigquery load/query jobs
+#gcloud projects add-iam-policy-binding ${PROJECT} \
+#    --member="serviceAccount:composer-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
+#    --role="roles/bigquery.jobUser"
+#
+#    # to create tables and load data
+#gcloud projects add-iam-policy-binding ${PROJECT} \
+#    --member="serviceAccount:composer-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
+#    --role="roles/bigquery.dataEditor"
+#
+#    # to submit dataflow jobs
+#gcloud projects add-iam-policy-binding ${PROJECT} \
+#    --member="serviceAccount:composer-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com" \
+#    --role="roles/dataflow.admin"
+#
 
 
 # Cloud Run - Example Customer Scoring Service

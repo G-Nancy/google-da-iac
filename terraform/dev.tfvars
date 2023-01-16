@@ -1,5 +1,5 @@
 project        = "pso-erste-digital-sandbox"
-compute_region = "europe-west1"
+compute_region = "europe-west3"
 data_region    = "eu"
 bq_landing_dataset_name = "erste_bq_landing"
 bq_curated_dataset_name = "erste_bq_curated"
@@ -7,25 +7,14 @@ bq_consumption_dataset_name = "erste_bq_consumption"
 
 terraform_service_account = "setup-infra-tf@pso-erste-digital-sandbox.iam.gserviceaccount.com"
 
-view_dataset_labels = {
-  env      = "dev"
-  billable = "true"
-  owner    = "e-digital"
-}
-lz_dataset_labels = {
-  env      = "dev"
-  billable = "true"
-  owner    = "e-digital"
-}
-
 bq_lz_tables = [
   {
-    table_id           = "lz_customers",
-    schema             = "modules/bigquery-core/schema/lz_customer.json",
+    table_id           = "customer_stg_1",
+    schema             = "/schema/landing/customer_stg.json",
     time_partitioning  = null,
     range_partitioning = null,
     expiration_time    = 2524604400000, # 2050/01/01
-    clustering         = ["country"],
+    clustering         = [],
     labels = {
       env      = "devops"
       billable = "true"
@@ -33,6 +22,75 @@ bq_lz_tables = [
     },
   }
 ]
+
+bq_cr_tables = [
+  {
+    table_id           = "customer_1",
+    schema             = "/schema/curated/customer.json",
+    time_partitioning  = null,
+    range_partitioning = null,
+    expiration_time    = 2524604400000, # 2050/01/01
+    clustering         = [],
+    labels = {
+      env      = "devops"
+      billable = "true"
+      owner    = "e-cr"
+    },
+  },
+  {
+    table_id           = "customer_stg_1",
+    schema             = "/schema/curated/customer_score.json",
+    time_partitioning  = null,
+    range_partitioning = null,
+    expiration_time    = 2524604400000, # 2050/01/01
+    clustering         = [],
+    labels = {
+      env      = "devops"
+      billable = "true"
+      owner    = "e-cr"
+    },
+  },
+  {
+    table_id           = "failed_customer_processing_1",
+    schema             = "/schema/curated/failed_record_processing.json",
+    time_partitioning  = null,
+    range_partitioning = null,
+    expiration_time    = 2524604400000, # 2050/01/01
+    clustering         = [],
+    labels = {
+      env      = "devops"
+      billable = "true"
+      owner    = "e-cr"
+    },
+  }
+]
+
+cm_views = [
+  {
+    view_id        = "v_customer",
+    use_legacy_sql = false,
+    table     = "customer"
+    query          = "modules/bigquery-core/views/v_cn_customer.tpl"
+    labels = {
+      env      = "devops"
+      billable = "true"
+      owner    = "e-cr"
+    },
+  },
+  {
+    view_id        = "v_customer_score",
+    use_legacy_sql = false,
+    table     = "customer_score"
+    query          = "modules/bigquery-core/views/v_cn_customer_score.tpl"
+    labels = {
+      env      = "devops"
+      billable = "true"
+      owner    = "e-cr"
+    },
+  }
+]
+
+deletion_protection = false
 
 bq_bi_dataset = {
   bq_team1_dataset ={
@@ -70,6 +128,47 @@ spanner_labels = {
   billable = "true"
   owner    = "e-digital"
 }
+
+############composer variables###############
+zone = "europe-west3-c"
+
+composer_service_account_name = "composer-e-dev"
+
+composer_name = "e-dev"
+
+#composer_master_ipv4_cidr_block
+
+network_name = "default"
+
+subnetwork_name = ""
+
+composer_labels = {
+env      = "dev"
+billable = "true"
+owner    = "e-digital"
+}
+
+
+############Cloud Storage variables###############
+gcs_e_bkt_list = {
+  e-digital-sandbox-data-test ={
+    name = "e-digital-sandbox-data-test"
+    location  = "europe-west3"
+    uniform_bucket_level_access = "false"
+    labels = {
+      owner="team1"
+    }
+  }
+  e-digital-sandbox-df-test ={
+    name = "e-digital-sandbox-df-test"
+    location  = "europe-west3"
+    uniform_bucket_level_access = "false"
+    labels = {
+      owner="e-digital" #Only lowercase char
+    }
+  }
+}
+
 
 #domain_mapping = [
 #  {

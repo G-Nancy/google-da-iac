@@ -75,9 +75,10 @@ module "bigquery" {
   cr_dataset = var.bq_curated_dataset_name
   cm_dataset = var.bq_consumption_dataset_name
   lz_tables = var.bq_lz_tables
-  table_dataset_labels = var.lz_dataset_labels
-  view_dataset_labels =var.view_dataset_labels
+  cr_tables = var.bq_cr_tables
+  cm_views = var.cm_views
   bq_bi_dataset = var.bq_bi_dataset
+  deletion_protection = var.deletion_protection
 }
 
 module "spanner" {
@@ -88,6 +89,23 @@ module "spanner" {
   spanner_node_count = var.spanner_node_count
   spanner_db_retention_days = var.spanner_db_retention_days
   spanner_labels = var.spanner_labels
+}
+
+module "composer" {
+  source                          = "./modules/composer"
+  composer_service_account_name   = var.composer_service_account_name
+  composer_name                   = "composer-${var.composer_name}"
+  project                         = var.project
+  region                          = var.compute_region
+  zone                            = var.zone
+  orch_network                    = var.network_name
+  orch_subnetwork                 = var.subnetwork_name
+#  composer_master_ipv4_cidr_block = var.composer_master_ipv4_cidr_block
+  composer_labels                 = var.composer_labels
+}
+module "gcs" {
+  source = "./modules/gcs"
+  gcs_e_bkt_list = var.gcs_e_bkt_list
 }
 
 #module "data-catalog" {
