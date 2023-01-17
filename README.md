@@ -21,7 +21,7 @@ export TF_SA=<service account name used by terraform>
 #### Prepare Terraform State Bucket
 
 ```shell
-gsutil mb -p $PROJECT_ID -l $COMPUTE_REGION -b on $BUCKET
+gsutil mb -p $PROJECT_ID -l $COMPUTE_REGION -b on gs://$BUCKET
 ```
 
 #### Prepare Terraform Service Account
@@ -85,10 +85,19 @@ Terraform needs to run with a service account to deploy DLP resources. User acco
 ./scripts/deploy_terraform.sh
 ```
 
-#### Notes
+#### Enable Google Private Access
 
 * We're using the default VPC
-* To use dataflow with private IPs one must enable Google Private Access on the subnetwork. This is done manually (https://cloud.google.com/vpc/docs/configure-private-google-access#console_2) in the POC
-project on europe-west3 subnetwork in the default VPC. Dataflow job must be submitted to region europe-west3 in that case.
-* On the actual project, a shared VPC is expected and the subnetwork has to enable Google Private Access. Dataflow jobs are then submitted
- to the desired subnetwork via the --subnetwork param
+* To use dataflow with private IPs one must enable Google Private Access on the subnetwork.
+```shell
+gcloud compute networks subnets update <SUBNETWORK> \
+--region=<REGION> \
+--enable-private-ip-google-access
+```
+* On the customer project, a shared VPC is expected and the subnetwork has to enable Google Private Access. Dataflow jobs are then submitted
+  to the desired subnetwork via the --subnetwork param
+
+
+
+  
+
