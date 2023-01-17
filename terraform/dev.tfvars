@@ -148,7 +148,6 @@ billable = "true"
 owner    = "e-digital"
 }
 
-
 ############Cloud Storage variables###############
 gcs_e_bkt_list = {
   e-digital-sandbox-data-test ={
@@ -169,31 +168,36 @@ gcs_e_bkt_list = {
   }
 }
 
+############ Artifact repository variables###############
+artifact_repo_id = "dataplatform-v1"
+artifact_repo_format = "docker"
+artifact_repo_description = "Docker repository"
+artifact_repo_iam = {
+  "roles/artifactregistry.admin" = ["user:gnancy@google.com"]
+}
+artifact_repo_labels = {
+  owner="e-digital" #Only lowercase char
+}
 
-#domain_mapping = [
-#  {
-#    project = "pso-erste-digital-sandbox",
-#    domain = "consumer",
-#    datasets = [] // leave empty if no dataset overrides is required for this project
-#  },
-#  {
-#    project = "pso-erste-digital-sandbox",
-#    domain = "digital",
-#    datasets = [
-#      {
-#        name = "erste_bq_landing",
-#        domain = "landing"
-#      },
-#      {
-#        name = "erste_bq_curated",
-#        domain = "curated"
-#      },
-#      {
-#        name = "erste_bq_consumption",
-#        domain = "consumption"
-#      },
-#    ]
-#  }
-#]
-#
-#activated_policy_types = ["FINE_GRAINED_ACCESS_CONTROL"]
+################## IAM Variables############
+df_project_permissions =  [
+  "roles/dataflow.admin",
+  "roles/run.invoker", # to invoke cloud run
+  "roles/bigquery.dataEditor", # to create tables and load data
+  "roles/bigquery.jobUser", # to create bigquery load/query jobs
+  "roles/artifactregistry.reader",
+  "roles/dataflow.worker",
+  "roles/storage.admin",
+]
+
+df_sa_name = "sa-dataflow-admin"
+cr_sa_name = "sa-cloudrun-admin"
+
+################## Data Catalog Variables############
+tags       = {
+  low = null
+  medium = null
+  high = {"roles/datacatalog.categoryFineGrainedReader" = ["group:GROUP_NAME@example.com"]}
+}
+dc_tx_name = "test-policy-tags"
+activated_policy_types = ["FINE_GRAINED_ACCESS_CONTROL"]

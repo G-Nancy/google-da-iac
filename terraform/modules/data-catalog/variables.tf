@@ -18,11 +18,6 @@ variable "project" {
   description = "GCP project id."
 }
 
-variable "domain" {
-  type = string
-  description = "the domain name for the taxonomy"
-}
-
 variable "activated_policy_types" {
   description = "A list of policy types that are activated for this taxonomy."
   type        = list(string)

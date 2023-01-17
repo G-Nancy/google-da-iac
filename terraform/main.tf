@@ -93,7 +93,7 @@ module "spanner" {
 
 module "composer" {
   source                          = "./modules/composer"
-  composer_service_account_name   = var.composer_service_account_name
+  composer_service_account_name   = module.iam.composer_sa_email
   composer_name                   = "composer-${var.composer_name}"
   project                         = var.project
   region                          = var.compute_region
@@ -103,19 +103,39 @@ module "composer" {
 #  composer_master_ipv4_cidr_block = var.composer_master_ipv4_cidr_block
   composer_labels                 = var.composer_labels
 }
+
 module "gcs" {
   source = "./modules/gcs"
   gcs_e_bkt_list = var.gcs_e_bkt_list
 }
 
-#module "data-catalog" {
-##  count = length(local.domains)
-#  source = "./modules/data-catalog"
-#  project = var.project
-#  region = var.data_region
-##  domain = local.domains[count.index]
-##  activated_policy_types = var.activated_policy_types
-#}
+module "docker_artifact_registry" {
+  source     = "./modules/artifact-registry"
+  project = var.project
+  location   = var.compute_region
+  format     = var.artifact_repo_format
+  id         = var.artifact_repo_id
+  iam = var.artifact_repo_iam
+  labels = var.artifact_repo_labels
+}
+
+module "iam" {
+  source = "./modules/iam"
+  project = var.project
+  df_sa_name = var.df_sa_name #Dataflow service account
+  df_project_permissions = var.df_project_permissions
+  cr_sa_name = var.cr_sa_name #Cloud Run service account
+  composer_service_account_name = var.composer_service_account_name #Composer service account
+}
+
+module "data-catalog" {
+  source = "./modules/data-catalog"
+  name = var.dc_tx_name
+  project = var.project
+  region = var.data_region
+  activated_policy_types = var.activated_policy_types
+  tags = var.tags
+}
 
 
 # BigQuery Core (it's module)

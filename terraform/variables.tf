@@ -196,14 +196,64 @@ variable "gcs_e_bkt_list" {
   default = {}
 }
 
+################## Artifact Registry Variables############
+variable "artifact_repo_labels" {
+  description = "A mapping of labels to assign to the spanner instance."
+  type        = map(string)
+}
 
-## Data Catalog Variables
-#variable "activated_policy_types" {
-#  description = "A list of policy types that are activated for this taxonomy."
-#  type        = list(string)
-#  default     = []
-#}
-#
+variable "artifact_repo_description" {
+  description = "An optional description for the repository."
+  type        = string
+  default     = "Terraform-managed registry"
+}
+
+variable "artifact_repo_format" {
+  description = "Repository format. One of DOCKER or UNSPECIFIED."
+  type        = string
+  default     = "DOCKER"
+}
+
+variable "artifact_repo_iam" {
+  description = "IAM bindings in {ROLE => [MEMBERS]} format."
+  type        = map(list(string))
+  default     = {}
+}
+
+variable "artifact_repo_id" {
+  description = "Repository id."
+  type        = string
+}
+
+################## Dataflow Variables############
+variable "df_project_permissions" {
+  type = list
+  default = [
+    "roles/dataflow.admin",
+    "roles/run.invoker", # to invoke cloud run
+    "roles/bigquery.dataEditor", # to create tables and load data
+    "roles/bigquery.jobUser", # to create bigquery load/query jobs
+    "roles/artifactregistry.reader",
+    "roles/dataflow.worker",
+    "roles/storage.admin",
+  ]
+}
+
+variable "df_sa_name" {
+  type = string
+}
+
+variable "cr_sa_name" {
+  type = string
+}
+
+# Data Catalog Variables
+variable "activated_policy_types" {
+  description = "A list of policy types that are activated for this taxonomy."
+  type        = list(string)
+  default     = []
+}
+
 #variable "domain_mapping" {
 #  type = list(object({
 #    project = string,
@@ -216,4 +266,15 @@ variable "gcs_e_bkt_list" {
 #  description = "Mapping between domains and GCP projects or BQ Datasets. Dataset-level mapping will overwrite project-level mapping for a given project."
 #}
 
+variable "dc_tx_name" {
+  type = string
+  description = "the name for the taxonomy"
+}
+
+variable "tags" {
+  description = "List of Data Catalog Policy tags to be created with optional IAM binging configuration in {tag => {ROLE => [MEMBERS]}} format."
+  type        = map(map(list(string)))
+  nullable    = false
+  default     = {}
+}
 
