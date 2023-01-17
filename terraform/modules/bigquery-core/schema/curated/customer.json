@@ -12,10 +12,6 @@
     "type": "STRING"
   },
   {
-    "name": "last_name",
-    "type": "STRING"
-  },
-  {
     "name": "date_of_birth",
     "type": "DATETIME"
   },

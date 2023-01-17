@@ -17,7 +17,6 @@
 #
 set -e
 
-
 echo "enabling cloudresourcemanager .."
 gcloud services enable cloudresourcemanager.googleapis.com
 
@@ -53,3 +52,6 @@ gcloud services enable appengine.googleapis.com
 
 echo "enabling compute .."
 gcloud services enable compute.googleapis.com
+
+echo "enabling spanner .."
+gcloud services enable spanner.googleapis.com

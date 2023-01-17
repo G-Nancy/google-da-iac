@@ -2,5 +2,6 @@ SELECT
 id,
 first_name,
 last_name,
-address
+address,
+score
 FROM `${project}.${dataset}.${cr_table}`

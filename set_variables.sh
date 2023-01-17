@@ -32,7 +32,7 @@ echo "terraform service account = ${TF_SA}"
 echo "terraform gcs bucket = ${BUCKET}"
 echo "projects COMPUTE_REGION = ${COMPUTE_REGION}"
 
-gcloud config configurations create $CONFIG
+#gcloud config configurations create $CONFIG
 gcloud config set project $PROJECT_ID
 gcloud config set account $ACCOUNT
 gcloud config set compute/region $COMPUTE_REGION

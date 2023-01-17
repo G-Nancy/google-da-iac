@@ -47,7 +47,7 @@ provider "google-beta" {
   request_timeout = "60s"
 }
 
-#locals {
+locals {
 #  common_cloud_run_variables = [
 #    {
 #      name = "PROJECT_ID",
@@ -65,7 +65,7 @@ provider "google-beta" {
 #
 #  # Only projects with configured domains
 #  domains = distinct([for entry in var.domain_mapping: entry if lookup(entry, "domain") != ""])
-#}
+}
 
 module "bigquery" {
   source = "./modules/bigquery-core"
@@ -74,20 +74,68 @@ module "bigquery" {
   lz_dataset = var.bq_landing_dataset_name
   cr_dataset = var.bq_curated_dataset_name
   cm_dataset = var.bq_consumption_dataset_name
-  lz_tables           = var.bq_lz_tables
-  table_dataset_labels             = var.lz_dataset_labels
-  view_dataset_labels =var.view_dataset_labels
+  lz_tables = var.bq_lz_tables
+  cr_tables = var.bq_cr_tables
+  cm_views = var.cm_views
   bq_bi_dataset = var.bq_bi_dataset
+  deletion_protection = var.deletion_protection
 }
 
-#module "data-catalog" {
-##  count = length(local.domains)
-#  source = "./modules/data-catalog"
-#  project = var.project
-#  region = var.data_region
-##  domain = local.domains[count.index]
-##  activated_policy_types = var.activated_policy_types
-#}
+module "spanner" {
+  source = "./modules/spanner"
+  project = var.project
+  region = var.compute_region
+  spanner_instance = var.spanner_instance
+  spanner_node_count = var.spanner_node_count
+  spanner_db_retention_days = var.spanner_db_retention_days
+  spanner_labels = var.spanner_labels
+}
+
+module "composer" {
+  source                          = "./modules/composer"
+  composer_service_account_name   = module.iam.composer_sa_email
+  composer_name                   = "composer-${var.composer_name}"
+  project                         = var.project
+  region                          = var.compute_region
+  zone                            = var.zone
+  orch_network                    = var.network_name
+  orch_subnetwork                 = var.subnetwork_name
+#  composer_master_ipv4_cidr_block = var.composer_master_ipv4_cidr_block
+  composer_labels                 = var.composer_labels
+}
+
+module "gcs" {
+  source = "./modules/gcs"
+  gcs_e_bkt_list = var.gcs_e_bkt_list
+}
+
+module "docker_artifact_registry" {
+  source     = "./modules/artifact-registry"
+  project = var.project
+  location   = var.compute_region
+  format     = var.artifact_repo_format
+  id         = var.artifact_repo_id
+  iam = var.artifact_repo_iam
+  labels = var.artifact_repo_labels
+}
+
+module "iam" {
+  source = "./modules/iam"
+  project = var.project
+  df_sa_name = var.df_sa_name #Dataflow service account
+  df_project_permissions = var.df_project_permissions
+  cr_sa_name = var.cr_sa_name #Cloud Run service account
+  composer_service_account_name = var.composer_service_account_name #Composer service account
+}
+
+module "data-catalog" {
+  source = "./modules/data-catalog"
+  name = var.dc_tx_name
+  project = var.project
+  region = var.data_region
+  activated_policy_types = var.activated_policy_types
+  tags = var.tags
+}
 
 
 # BigQuery Core (it's module)
