@@ -7,7 +7,7 @@ domain: wadie.joonix.net
 
 project: pso-erste-digital-sandbox
 ```
-# Terraform
+# Deploy Terraform
 
 #### Set Variables
 ```shell
@@ -97,7 +97,66 @@ gcloud compute networks subnets update <SUBNETWORK> \
 * On the customer project, a shared VPC is expected and the subnetwork has to enable Google Private Access. Dataflow jobs are then submitted
   to the desired subnetwork via the --subnetwork param
 
+# Dataflow
+## Deploy Dataflow Batch Job(s)
 
+Set and export the following variables:
 
+```shell
+export PROJECT=<dataflow project>
+export REGION=<dataflow region>
+export DOCKER_REPO=<docker repo name - created by terraform>
+export PIPELINE_NAME=batch-example-java
+export POM_PATH="dataflow/batch/dataflow-batch-example-java/pom.xml"
+export FLEX_DOCKER_PATH="dataflow/batch/dataflow-batch-example-java/Dockerfile"
+export FLEX_META_DATA_PATH="dataflow/batch/dataflow-batch-example-java/metadata.json"
+export JAVA_JAR="dataflow/batch/dataflow-batch-example-java/target/dataflow-batch-example-java-bundled-1.0.jar"
+export JAVA_MAIN_CLASS="com.google.cloud.pso.BatchExamplePipeline"
+export IMAGE_BUILD_VERSION=1.0
+export FLEX_TEMPLATE_PATH=gs://<dataflow bucket created by terraform>/flex-templates/${PIPELINE_NAME}/${PIPELINE_NAME}-metadata.json
+```
   
+Run the deployment script
+```shell
+. scripts/deploy_dataflow_flex_template.sh 
+```
+
+Repeat the process to deploy newly added jobs
+
+
+## Run Dataflow Batch Job
+
+To run the `dataflow-batch-example-java` job via the deployed Flex-Template:
+
+Set and export these additional variables:
+```shell
+
+export DATAFLOW_BUCKET=<dataflow resourses bucket created by terraform>
+export JOB_PARAM_INPUT_TABLE=<dataset.table>
+export JOB_PARAM_OUTPUT_TABLE=<dataset.table>
+export JOB_PARAM_ERROR_TABLE=<dataset.table>
+export JOB_PARAM_SERVICE_URL=<customer scoring service deployed by Terraform>
+export JOB_WORKER_TYPE=n2-standard-2
+export JOB_WORKERS_COUNT=1
+export DATAFLOW_SERVICE_ACCOUNT_EMAIL=<dataflow sa deployed by Terraform>
+```
+
+Run the following command
+```shell
+RUN_ID=`date +%Y%m%d-%H%M%S`
+gcloud dataflow flex-template run "batch-example-flex-${RUN_ID}" \
+    --template-file-gcs-location ${FLEX_TEMPLATE_PATH} \
+    --parameters inputTable=${JOB_PARAM_INPUT_TABLE} \
+    --parameters outputTable=${JOB_PARAM_OUTPUT_TABLE} \
+    --parameters errorTable=${JOB_PARAM_ERROR_TABLE} \
+    --parameters customerScoringServiceUrl=${JOB_PARAM_SERVICE_URL} \
+    --temp-location "gs://${DATAFLOW_BUCKET}/runs/batch-example-java/${RUN_ID}/temp/" \
+    --staging-location "gs://${DATAFLOW_BUCKET}/runs/batch-example-java/${RUN_ID}/stg/" \
+    --worker-machine-type ${JOB_WORKER_TYPE} \
+    --region ${REGION} \
+    --num-workers ${JOB_WORKERS_COUNT} \
+    --disable-public-ips \
+    --service-account-email=${DATAFLOW_SERVICE_ACCOUNT_EMAIL}
+```
+
 
