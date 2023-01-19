@@ -10,10 +10,12 @@ variable "region" {
 }
 
 variable "zone" {
+  type = string
   description = "The zone the resources will be created in"
+
 }
 
-variable "composer_service_account_name" {
+variable "composer_service_account_email" {
   type = string
   description = "Name of Composer Environment"
 }
@@ -68,4 +70,8 @@ variable "orch_subnetwork" {
 variable "composer_labels" {
   description = "A mapping of labels to assign to the spanner instance."
 #  type        = map(string)
+}
+
+variable "env_variables" {
+  type = map(string)
 }

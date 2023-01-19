@@ -11,32 +11,29 @@
 #  description = "Name of bigquery consumption dataset resources being provisioned."
 #}
 
-output "bigquery_lz_dataset" {
-  value       = google_bigquery_dataset.landing_zone_dataset
-  description = "Bigquery dataset resource."
+output "landing_dataset_id" {
+  value       = google_bigquery_dataset.landing_zone_dataset.dataset_id
 }
 
-output "bigquery_cr_dataset" {
-  value       = google_bigquery_dataset.curated_zone_dataset
-  description = "Bigquery dataset resource."
+output "curated_dataset_id" {
+  value       = google_bigquery_dataset.curated_zone_dataset.dataset_id
 }
 
-output "bigquery_cm_dataset" {
-  value       = google_bigquery_dataset.consumption_zone_dataset
-  description = "Bigquery dataset resource."
+output "consumption_dataset_id" {
+  value       = google_bigquery_dataset.consumption_zone_dataset.dataset_id
 }
 
-output "lz_table_ids" {
+output "landing_table_ids" {
   value = [
-  for table in google_bigquery_table.lz_customer_table :
+  for table in google_bigquery_table.landing_customer_table :
   table.table_id
   ]
   description = "Unique id for the table being provisioned"
 }
 
-output "cr_table_ids" {
+output "curated_table_ids" {
   value = [
-  for table in google_bigquery_table.cr_customer_table :
+  for table in google_bigquery_table.curated_customer_table :
   table.table_id
   ]
   description = "Unique id for the table being provisioned"

@@ -2,7 +2,7 @@ locals {
   logt = file("${path.module}/sql/logs.sql")
 }
 
-resource "google_spanner_instance" "e-spanner-instance" {
+resource "google_spanner_instance" "spanner-instance" {
   project      = var.project
   name         = var.spanner_instance
   config       = "regional-${var.region}"
@@ -17,7 +17,7 @@ resource "random_id" "db_name_suffix" {
 
 resource "google_spanner_database" "database" {
   project  = var.project
-  instance = google_spanner_instance.e-spanner-instance.name
+  instance = google_spanner_instance.spanner-instance.name
   name     = "${var.spanner_instance}-${random_id.db_name_suffix.hex}"
   ddl                 = [local.logt]
   version_retention_period = var.spanner_db_retention_days

@@ -18,6 +18,7 @@
 set -e
 
 gcloud iam service-accounts create "${TF_SA}" \
+    --project=${PROJECT_ID} \
     --description="Used by Terraform to deploy GCP resources" \
     --display-name="Terraform Service Account"
 

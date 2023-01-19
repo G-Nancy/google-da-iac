@@ -6,30 +6,30 @@
 resource "google_bigquery_dataset" "landing_zone_dataset" {
   project = var.project
   location = var.region
-  dataset_id = var.lz_dataset
+  dataset_id = var.landing_dataset
   description = "To store landing zone data in BigQuery"
 }
 
 resource "google_bigquery_dataset" "curated_zone_dataset" {
   project = var.project
   location = var.region
-  dataset_id = var.cr_dataset
+  dataset_id = var.curated_dataset
   description = "To store curated layer data in BigQuery"
 }
 
 resource "google_bigquery_dataset" "consumption_zone_dataset" {
   project = var.project
   location = var.region
-  dataset_id = var.cm_dataset
+  dataset_id = var.consumption_dataset
   description = "To store consumption layer data in BigQuery"
 }
 
 ##### Tables #######################################################
 
-resource "google_bigquery_table" "lz_customer_table" {
+resource "google_bigquery_table" "landing_customer_table" {
   project = var.project
   dataset_id = google_bigquery_dataset.landing_zone_dataset.dataset_id
-  for_each = { for table in var.lz_tables : table["table_id"] => table }
+  for_each = { for table in var.landing_tables : table["table_id"] => table }
   table_id = each.key
   labels              = each.value["labels"]
   schema              = file("${path.module}${each.value["schema"]}")
@@ -48,12 +48,12 @@ resource "google_bigquery_table" "lz_customer_table" {
   }
 }
 
-resource "google_bigquery_table" "cr_customer_table" {
+resource "google_bigquery_table" "curated_customer_table" {
   project = var.project
   dataset_id = google_bigquery_dataset.curated_zone_dataset.dataset_id
 #  table_id = "cr_customers"
 #  schema = file("modules/bigquery-core/schema/cr_customer.json")
-  for_each = { for table in var.cr_tables : table["table_id"] => table }
+  for_each = { for table in var.curated_tables : table["table_id"] => table }
   table_id = each.key
   labels              = each.value["labels"]
   schema              = file("${path.module}${each.value["schema"]}")
@@ -72,10 +72,9 @@ resource "google_bigquery_table" "cr_customer_table" {
   }
 }
 
-
 ### Consumption Views ##################################################
 resource "google_bigquery_table" "view_cr_layer" {
-  for_each            = { for view in var.cm_views : view["view_id"] => view }
+  for_each            = { for view in var.consumption_views : view["view_id"] => view }
   dataset_id          = google_bigquery_dataset.consumption_zone_dataset.dataset_id
   friendly_name       = each.key
   table_id            = each.value["table"]
@@ -83,7 +82,7 @@ resource "google_bigquery_table" "view_cr_layer" {
   project             = var.project
   deletion_protection = var.deletion_protection
   view {
-    query          = templatefile("${each.value["query"]}",
+    query          = templatefile(each.value["query"],
     {
       project = var.project
       dataset = google_bigquery_dataset.curated_zone_dataset.dataset_id
@@ -101,20 +100,19 @@ resource "google_bigquery_table" "view_cr_layer" {
 
 
 #####Team specific datasets#########################
-resource "google_bigquery_dataset" "bi_dataset" {
-  for_each = var.bq_bi_dataset
+resource "google_bigquery_dataset" "bi_datasets" {
+  for_each = var.bq_consumers_datasets
   project = var.project
   dataset_id = each.key
-  location = each.value["region"]
+  location = var.region
   description = each.value["description"]
   labels = each.value["labels"]
-  access {
-    role          = "OWNER"
-    user_by_email = each.value["owner"]
-  }
 
-  access {
-    role   = "READER"
-    domain = each.value["domain_reader"]
+  dynamic access {
+    for_each = each.value["iam_owners"]
+    content {
+      role          = "OWNER"
+      user_by_email = access.value
+    }
   }
 }

@@ -1,8 +1,0 @@
-env=poc
-project=pso-erste-digital-sandbox
-customer_dataflow_flex_template_spec=gs://pso-erste-digital-sandbox-dataflow/flex-templates/batch-example-java/batch-example-java-metadata.json
-dataflow_temp_bucket=gs://pso-erste-digital-sandbox-dataflow
-dataflow_service_account_email=dataflow-temp@pso-erste-digital-sandbox.iam.gserviceaccount.com
-dataflow_region=europe-west3
-last_version=&LAST_VERSION&
-customer_scoring_url=https://example-customer-scoring-java-kiwdmfjrka-ey.a.run.app/api/customer/score

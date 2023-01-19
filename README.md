@@ -1,27 +1,44 @@
 # erste-digital-poc
 Google PSO POC project for Erste Digital - for internal collaboration
 
-# Project
-```shell
-domain: wadie.joonix.net
-
-project: pso-erste-digital-sandbox
-```
-# Deploy Terraform
+# Deployment
 
 #### Set Variables
 ```shell
-export PROJECT_ID=pso-erste-digital-sandbox
-export COMPUTE_REGION=
+export PROJECT_ID=<gcp project>
+export COMPUTE_REGION=<region to deploy compute resources>
+export DATA_REGION=<region to deploy data resources>
 export ACCOUNT=<current user account email>
-export BUCKET=<terraform state bucket>
-export TF_SA=<service account name used by terraform>
+export TF_BUCKET="${PROJECT_ID}_terraform"
+export TF_SA=sa-terraform
+export DOCKER_REPOSITORY_NAME=data-platform-docker-repo
+```
+
+#### gcloud config
+
+Create (or activate) a gcloud config profile for this project
+```shell
+export CONFIG=<config name for gcloud>
+
+gcloud config configurations create $CONFIG
+gcloud config set project $PROJECT_ID
+gcloud config set account $ACCOUNT
+gcloud config set compute/region $COMPUTE_REGION
+
+gcloud auth login
+gcloud auth application-default login
+```
+
+#### Enable GCP APIs
+
+```shell
+./scripts/enable_gcp_apis.sh
 ```
 
 #### Prepare Terraform State Bucket
 
 ```shell
-gsutil mb -p $PROJECT_ID -l $COMPUTE_REGION -b on gs://$BUCKET
+gsutil mb -p $PROJECT_ID -l $COMPUTE_REGION -b on gs://${TF_BUCKET}
 ```
 
 #### Prepare Terraform Service Account
@@ -32,28 +49,46 @@ Terraform needs to run with a service account to deploy DLP resources. User acco
 ./scripts/prepare_terraform_service_account.sh
 ```
 
-#### Enable GCP APIs
+#### Create a Docker Repo
 
 ```shell
-./scripts/enable_gcp_apis.sh
+./scripts/create_artifact_registry.sh
+```
+
+#### Enable Google Private Access
+
+* We're using the default VPC
+* To use dataflow with private IPs one must enable Google Private Access on the subnetwork.
+```shell
+gcloud compute networks subnets update default \
+--project=${PROJECT_ID} \
+--region=${COMPUTE_REGION} \
+--enable-private-ip-google-access
+```
+* On the customer project, a shared VPC is expected and the subnetwork has to enable Google Private Access. Dataflow jobs are then submitted
+  to the desired subnetwork via the --subnetwork param
+
+#### Build Service(s) Image(s)
+
+Build the docker image that will be used for the customer scoring service.
+The image is pushed to Artifact Registry and will be later used by Cloud Run.
+```shell
+
+export CUSTOMER_SCORING_IMAGE="${COMPUTE_REGION}-docker.pkg.dev/${PROJECT_ID}/${DOCKER_REPOSITORY_NAME}/services/example-customer-scoring-java:latest"
+
+mvn -f services/example-customer-scoring-java/pom.xml \
+compile jib:build \
+-Dimage="${CUSTOMER_SCORING_IMAGE}"
 ```
 
 
-#### Terraform Variables Configuration
+#### Configure Terraform Variables
 
-The solution is deployed by Terraform and thus all configurations are done
-on the Terraform side.
-
-##### Create a Terraform .tfvars file
-
-Create a new .tfvars file and override the variables in the below sections. You can use the example
-tfavrs files as a base [example-variables](terraform/example-variables.tfvars).
+Create a new `variables.tfvars` file and override the variables in the below sections.
 
 ```shell
-export VARS=my-variables.tfvars
+export VARS=variables.tfvars
 ```
-
-##### Configure Project Variables
 
 Most required variables have default values defined in [variables.tf](terraform/variables.tf).
 One can use the defaults or overwrite them in the newly created .tfvars.
@@ -61,20 +96,14 @@ One can use the defaults or overwrite them in the newly created .tfvars.
 Both ways, one must set the below variables:
 
 ```yaml
+deployment_version = "<major.minor> (this should be automated by the CICD pipeline)"
 project = "<GCP project ID to deploy solution to (equals to $PROJECT_ID) >"
 compute_region = "<GCP region to deploy compute resources e.g. cloud run, iam, etc (equals to $COMPUTE_REGION)>"
 data_region = "<GCP region to deploy data resources (buckets, datasets, tag templates, etc> (equals to $DATA_REGION)"
-```
-
-##### Configure Terraform Service Account
-
-Terraform needs to run with a service account to deploy DLP resources. User accounts are not enough.
-
-This service account name is defined in the "Setup Environment Variables" step and created
-in the "Prepare Terraform Service Account" step.
-Use the full email of the created account.
-```yaml
-terraform_service_account = "${TF_SA}@${PROJECT_ID}.iam.gserviceaccount.com"
+terraform_service_account = " equals to ${TF_SA}@${PROJECT_ID}.iam.gserviceaccount.com"
+artifact_repo_name = "equals to ${DOCKER_REPOSITORY_NAME}"
+customer_scoring_service_image = "equals to ${COMPUTE_REGION}-docker.pkg.dev/${PROJECT_ID}/${DOCKER_REPOSITORY_NAME}/services/example-customer-scoring-java:latest"
+customer_dataflow_flex_template_spec = "equals to gs://${PROJECT_ID}-dataflow/flex-templates/batch-example-java/batch-example-java-metadata.json"
 ```
 
 #### Deploy Terraform
@@ -85,27 +114,13 @@ Terraform needs to run with a service account to deploy DLP resources. User acco
 ./scripts/deploy_terraform.sh
 ```
 
-#### Enable Google Private Access
+PS: Creating the Cloud Composer environment for the first time can drag Terraform operation to up to 20 mins.
 
-* We're using the default VPC
-* To use dataflow with private IPs one must enable Google Private Access on the subnetwork.
-```shell
-gcloud compute networks subnets update <SUBNETWORK> \
---region=<REGION> \
---enable-private-ip-google-access
-```
-* On the customer project, a shared VPC is expected and the subnetwork has to enable Google Private Access. Dataflow jobs are then submitted
-  to the desired subnetwork via the --subnetwork param
-
-# Dataflow
-## Deploy Dataflow Batch Job(s)
+#### Deploy Dataflow Batch Job(s)
 
 Set and export the following variables:
 
 ```shell
-export PROJECT=<dataflow project>
-export REGION=<dataflow region>
-export DOCKER_REPO=<docker repo name - created by terraform>
 export PIPELINE_NAME=batch-example-java
 export POM_PATH="dataflow/batch/dataflow-batch-example-java/pom.xml"
 export FLEX_DOCKER_PATH="dataflow/batch/dataflow-batch-example-java/Dockerfile"
@@ -113,7 +128,7 @@ export FLEX_META_DATA_PATH="dataflow/batch/dataflow-batch-example-java/metadata.
 export JAVA_JAR="dataflow/batch/dataflow-batch-example-java/target/dataflow-batch-example-java-bundled-1.0.jar"
 export JAVA_MAIN_CLASS="com.google.cloud.pso.BatchExamplePipeline"
 export IMAGE_BUILD_VERSION=1.0
-export FLEX_TEMPLATE_PATH=gs://<dataflow bucket created by terraform>/flex-templates/${PIPELINE_NAME}/${PIPELINE_NAME}-metadata.json
+export FLEX_TEMPLATE_PATH=gs://${PROJECT_ID}-dataflow/flex-templates/${PIPELINE_NAME}/${PIPELINE_NAME}-metadata.json
 ```
   
 Run the deployment script
@@ -123,6 +138,26 @@ Run the deployment script
 
 Repeat the process to deploy newly added jobs
 
+#### Deploy Composer Artifacts
+
+```shell
+export COMPOSER_BUCKET_NAME=<created by Composer>
+export DATA_BUCKET_CUSTOMERS=${PROJECT_ID}-customer-data
+
+. scripts/deploy_composer_artifacts.sh
+```
+
+# Testing the Pipeline
+
+Create sample test data on GCS
+```shell
+DATA_BUCKET_CUSTOMERS=${PROJECT_ID}-customer-data
+
+. scripts/deploy_sample_data.sh
+```
+Run the customer ingestion DAG from the Airflow UI
+
+# Dataflow
 
 ## Run Dataflow Batch Job
 
@@ -130,7 +165,6 @@ To run the `dataflow-batch-example-java` job via the deployed Flex-Template:
 
 Set and export these additional variables:
 ```shell
-
 export DATAFLOW_BUCKET=<dataflow resourses bucket created by terraform>
 export JOB_PARAM_INPUT_TABLE=<dataset.table>
 export JOB_PARAM_OUTPUT_TABLE=<dataset.table>

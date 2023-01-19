@@ -1,11 +1,11 @@
-output "sa_dataflow_runner" {
+output "sa_dataflow_runner_email" {
   value = google_service_account.sa_dataflow_runner.email
 }
 
-output "sa_cloudrun" {
+output "sa_cloudrun_email" {
   value = google_service_account.sa_cloudrun.email
 }
 
-output "composer_sa_email" {
-  value = google_service_account.composer_sa_email.email
+output "sa_composer_email" {
+  value = google_service_account.sa_composer.email
 }

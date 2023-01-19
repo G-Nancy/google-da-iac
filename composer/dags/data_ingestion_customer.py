@@ -21,20 +21,22 @@ dataflow_flex_template_spec = os.environ.get('customer_dataflow_flex_template_sp
 dataflow_temp_bucket = os.environ.get('dataflow_temp_bucket')
 dataflow_service_account_email = os.environ.get('dataflow_service_account_email')
 dataflow_region = os.environ.get('dataflow_region')
+bq_landing_dataset = os.environ.get('bq_landing_dataset')
+bq_curated_dataset = os.environ.get('bq_curated_dataset')
+customer_scoring_url = os.environ.get('customer_scoring_url')
 
-data_bucket = 'pso-erste-digital-sandbox-data'  # Bucket for data processing
-landing_folder = 'customers/landing'  # Folder for landing input data (from original data source to GCS).
-processing_folder = 'customers/processing'  # Folder for input data that is being processed.
-archive_folder = 'customers/archive'  # Folder for archived input data.
+data_bucket = f'{project}-customer-data'  # Bucket for data processing
+landing_folder = 'landing'  # Folder for landing input data (from original data source to GCS).
+processing_folder = 'processing'  # Folder for input data that is being processed.
+archive_folder = 'archive'  # Folder for archived input data.
 pipeline_name = "customer_ingestion_dag"
 # bq table where we ingest the new incoming batch
-bq_customer_stg_table = f'{project}.erste_bq_landing.customer_stg'
+bq_customer_stg_table = f'{project}.{bq_landing_dataset}.customer_stg'
 # bq table where we keep history of all customers after updating them with the new batch
-bq_customer_history_table = f'{project}.erste_bq_curated.customer'
+bq_customer_history_table = f'{project}.{bq_curated_dataset}.customer'
 # bq table where we keep history of all customers after updating them with the new batch
-bq_customer_score_table = f'{project}.erste_bq_curated.customer_score'
-bq_error_table = f'{project}.erste_bq_curated.failed_customer_processing'
-customer_scoring_url = os.environ.get('customer_scoring_url')
+bq_customer_score_table = f'{project}.{bq_curated_dataset}.customer_score'
+bq_error_table = f'{project}.{bq_curated_dataset}.failed_customer_processing'
 
 default_args = {
     'start_date': days_ago(2),
@@ -100,8 +102,8 @@ load_data_to_stg_bigquery = gcs_to_bq.GoogleCloudStorageToBigQueryOperator(
     destination_project_dataset_table=bq_customer_stg_table,
     write_disposition='WRITE_TRUNCATE',
     create_disposition="CREATE_IF_NEEDED",
-    #schema file has to be in the same bucket as the data files. The schema file is deployed in the CICD pipeline.
-    schema_object='customers/schema/customer_stg.json',
+    # schema file has to be in the same bucket as the data files. The schema file is deployed in the CICD pipeline.
+    schema_object='schema/customer_stg.json',
     dag=dag
 )
 
@@ -147,8 +149,8 @@ calculate_scores_dataflow = DataflowStartFlexTemplateOperator(
                 "autoscalingAlgorithm": "AUTOSCALING_ALGORITHM_NONE",
                 "enableStreamingEngine": "false",
                 "additionalExperiments": "use_runner_v2",
-                "tempLocation": f"{dataflow_temp_bucket}/{pipeline_name}/temp/",
-                "stagingLocation": f"{dataflow_temp_bucket}/{pipeline_name}/stg/",
+                "tempLocation": f"gs://{dataflow_temp_bucket}/{pipeline_name}/temp/",
+                "stagingLocation": f"gs://{dataflow_temp_bucket}/{pipeline_name}/stg/",
                 "serviceAccountEmail": dataflow_service_account_email,
                 # TODO: use the desired subnetwork on the customer env. The subnetwork has to have "Google Private Access" enabled to access GCP resources
                 # "subnetwork": SUBNETWORK,

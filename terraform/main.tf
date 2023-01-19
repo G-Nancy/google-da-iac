@@ -15,7 +15,7 @@
 
 
 provider "google" {
-  alias = "impersonation"
+  alias  = "impersonation"
   scopes = [
     "https://www.googleapis.com/auth/cloud-platform",
     "https://www.googleapis.com/auth/userinfo.email",
@@ -23,150 +23,136 @@ provider "google" {
 }
 
 data "google_service_account_access_token" "default" {
-  provider = google.impersonation
+  provider               = google.impersonation
   target_service_account = var.terraform_service_account
-  scopes = [
+  scopes                 = [
     "userinfo-email",
-    "cloud-platform"]
+    "cloud-platform"
+  ]
   lifetime = "1200s"
 }
 
 provider "google" {
   project = var.project
-  region = var.compute_region
+  region  = var.compute_region
 
-  access_token = data.google_service_account_access_token.default.access_token
+  access_token    = data.google_service_account_access_token.default.access_token
   request_timeout = "60s"
 }
 
 provider "google-beta" {
   project = var.project
-  region = var.compute_region
+  region  = var.compute_region
 
-  access_token = data.google_service_account_access_token.default.access_token
+  access_token    = data.google_service_account_access_token.default.access_token
   request_timeout = "60s"
 }
 
-locals {
-#  common_cloud_run_variables = [
-#    {
-#      name = "PROJECT_ID",
-#      value = var.project,
-#    },
-#    {
-#      name = "COMPUTE_REGION_ID",
-#      value = var.compute_region,
-#    },
-#    {
-#      name = "DATA_REGION_ID",
-#      value = var.data_region,
-#    }
-#  ]
-#
-#  # Only projects with configured domains
-#  domains = distinct([for entry in var.domain_mapping: entry if lookup(entry, "domain") != ""])
-}
-
 module "bigquery" {
-  source = "./modules/bigquery-core"
-  project = var.project
-  region = var.data_region
-  lz_dataset = var.bq_landing_dataset_name
-  cr_dataset = var.bq_curated_dataset_name
-  cm_dataset = var.bq_consumption_dataset_name
-  lz_tables = var.bq_lz_tables
-  cr_tables = var.bq_cr_tables
-  cm_views = var.cm_views
-  bq_bi_dataset = var.bq_bi_dataset
-  deletion_protection = var.deletion_protection
+  source                = "./modules/bigquery-core"
+  project               = var.project
+  region                = var.data_region
+  landing_dataset       = var.bq_landing_dataset_name
+  curated_dataset       = var.bq_curated_dataset_name
+  consumption_dataset   = var.bq_consumption_dataset_name
+  landing_tables        = var.bq_landing_tables
+  curated_tables        = var.bq_curated_tables
+  consumption_views     = var.bq_consumption_views
+  bq_consumers_datasets = var.bq_consumers_datasets
+  deletion_protection   = var.deletion_protection
 }
 
 module "spanner" {
-  source = "./modules/spanner"
-  project = var.project
-  region = var.compute_region
-  spanner_instance = var.spanner_instance
-  spanner_node_count = var.spanner_node_count
+  source                    = "./modules/spanner"
+  project                   = var.project
+  region                    = var.compute_region
+  spanner_instance          = var.spanner_instance_name
+  spanner_node_count        = var.spanner_node_count
   spanner_db_retention_days = var.spanner_db_retention_days
-  spanner_labels = var.spanner_labels
+  spanner_labels            = var.spanner_labels
 }
 
 module "composer" {
-  source                          = "./modules/composer"
-  composer_service_account_name   = module.iam.composer_sa_email
-  composer_name                   = "composer-${var.composer_name}"
-  project                         = var.project
-  region                          = var.compute_region
-  zone                            = var.zone
-  orch_network                    = var.network_name
-  orch_subnetwork                 = var.subnetwork_name
-#  composer_master_ipv4_cidr_block = var.composer_master_ipv4_cidr_block
-  composer_labels                 = var.composer_labels
+  source                         = "./modules/composer"
+  composer_service_account_email = module.iam.sa_composer_email
+  composer_name                  = var.composer_name
+  project                        = var.project
+  region                         = var.compute_region
+  zone                           = var.composer_zone
+  orch_network                   = var.network_name
+  orch_subnetwork                = var.subnetwork_name
+  #  composer_master_ipv4_cidr_block = var.composer_master_ipv4_cidr_block
+  composer_labels                = var.composer_labels
+  env_variables                  = {
+    env                                  = var.environment_level
+    project                              = var.project
+    customer_dataflow_flex_template_spec = var.customer_dataflow_flex_template_spec
+    dataflow_temp_bucket                 = module.gcs.dataflow_bucket_name
+    dataflow_service_account_email       = module.iam.sa_dataflow_runner_email
+    bq_curated_dataset = module.bigquery.curated_dataset_id
+    bq_landing_dataset = module.bigquery.landing_dataset_id
+    dataflow_region                      = var.compute_region
+    last_version                         = var.deployment_version
+    customer_scoring_url                 = "${module.cloud-run-customer-scoring.service_endpoint}/api/customer/score"
+  }
 }
 
 module "gcs" {
-  source = "./modules/gcs"
-  gcs_e_bkt_list = var.gcs_e_bkt_list
+  source                      = "./modules/gcs"
+  gcs_buckets                 = var.gcs_buckets
+  dataflow_bucket_name_suffix = var.dataflow_bucket_name_suffix
+  project                     = var.project
+  compute_region              = var.compute_region
+  data_region                 = var.data_region
 }
 
 module "docker_artifact_registry" {
-  source     = "./modules/artifact-registry"
-  project = var.project
-  location   = var.compute_region
-  format     = var.artifact_repo_format
-  id         = var.artifact_repo_id
-  iam = var.artifact_repo_iam
-  labels = var.artifact_repo_labels
+  source   = "./modules/artifact-registry"
+  project  = var.project
+  location = var.compute_region
+
+  repository_id = var.artifact_repo_name
+  iam           = var.artifact_repo_iam
 }
 
 module "iam" {
-  source = "./modules/iam"
-  project = var.project
-  df_sa_name = var.df_sa_name #Dataflow service account
-  df_project_permissions = var.df_project_permissions
-  cr_sa_name = var.cr_sa_name #Cloud Run service account
-  composer_service_account_name = var.composer_service_account_name #Composer service account
+  source                          = "./modules/iam"
+  project                         = var.project
+  dataflow_sa_name                = var.dataflow_sa_name #Dataflow service account
+  cloudrun_sa_name                = var.cloudrun_sa_name #Cloud Run service account
+  composer_sa_name                = var.composer_sa_name #Composer service account
 }
 
 module "data-catalog" {
-  source = "./modules/data-catalog"
-  name = var.dc_tx_name
-  project = var.project
-  region = var.data_region
-  activated_policy_types = var.activated_policy_types
-  tags = var.tags
+  source                 = "./modules/data-catalog"
+  name                   = var.data_catalog_taxonomy_name
+  project                = var.project
+  region                 = var.data_region
+  activated_policy_types = var.data_catalog_activated_policy_types
+  tags                   = var.data_catalog_taxonomy_tags
 }
 
 
-# BigQuery Core (it's module)
-  # landing dataset
-  # curated dataset
-  # consumption dataset
+module "cloud-run-customer-scoring" {
+  source                         = "./modules/cloud-run"
+  project                        = var.project
+  region                         = var.compute_region
+  service_image                  = var.customer_scoring_service_image
+  service_name                   = "customer-scoring-java"
+  service_account_email          = module.iam.sa_cloudrun_email
+  invoker_service_account_emails = [module.iam.sa_dataflow_runner_email]
+  timeout_seconds                = var.cloud_run_timeout_seconds
+  max_cpu                        = 1
 
-  # One sample table with it's schema, with partition and clustering  (schema: customer_name, customer_birth_date)
-  # The same sample table for the curated zone with extra metadata columns (schema: meta_data.source_system, customer_name, customer_birth_date)
-  # sample 1:1 view in the consumption dataset with view definition in a template file
-
-# BigQuery Consumption
-  # A module that could be invoked N times depending on the number of consumers
-  # We should have a list of Consumers (with their requied attributes) that we automate the creation of their reporting envs for
-  # For now the module should create a reporting dataset with the consumer name and add a resource label to it (e.g. owner="team name")
-  # Grant the team emails R/W access on the created dataset(s)
-  # [{"team": "bla", "groups": ["bla@customer.com"]}, {"team": "xyz", "groups": ["xyz@customer.com"}]]
-
-# Data Catalog
-  # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/data_catalog_tag_template
-  # Tag template with sample business metadata fields. Maybe show case different types of fields (strings, lists/enums, etc)
-
-# Composer
-  # Create a cluster
-
-# Spanner
-  # Create an instance of Spanner
-  # Sample schema
-
-# IAM
-  # Service account for dataflow
-  # Service account for Composer
-  # Access for these SAs (to BQ, GCS, Dataflow)
-  # (Postpone for now) row level access on BigQuery
+  # Use the common variables in addition to specific variables for this service
+  environment_variables = [
+    {
+      name  = "MIN_SCORE",
+      value = "0",
+    },
+    {
+      name  = "MAX_SCORE",
+      value = "10",
+    }
+  ]
+}

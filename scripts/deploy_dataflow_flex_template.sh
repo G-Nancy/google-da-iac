@@ -20,9 +20,9 @@
 # Check README.md to export the variables needed by this script
 
 gcloud auth configure-docker \
-  ${REGION}-docker.pkg.dev
+  ${COMPUTE_REGION}-docker.pkg.dev
 
-FLEX_IMAGE=${REGION}-docker.pkg.dev/${PROJECT}/${DOCKER_REPO}/dataflow/${PIPELINE_NAME}/flex-template
+FLEX_IMAGE=${COMPUTE_REGION}-docker.pkg.dev/${PROJECT_ID}/${DOCKER_REPOSITORY_NAME}/dataflow/${PIPELINE_NAME}/flex-template
 
 echo "FLEX_IMAGE=${FLEX_IMAGE}"
 

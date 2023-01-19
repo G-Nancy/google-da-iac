@@ -6,27 +6,29 @@ variable "region" {
   type = string
 }
 
-variable "lz_dataset" {
+variable "landing_dataset" {
   type = string
 }
 
-variable "cr_dataset" {
+variable "curated_dataset" {
   type = string
 }
 
-variable "cm_dataset" {
+variable "consumption_dataset" {
   type = string
 }
 
-variable "lz_tables" {
+variable "landing_tables" {
   description = "A list of maps that includes table_id, schema, clustering, time_partitioning, range_partitioning, view, expiration_time, labels in each element."
   default     = []
-  type = list(object({
-    table_id   = string,
-    schema     = string,
-    clustering = list(string),  # Specifies column names to use for data clustering. Up to four top-level columns are allowed, and should be specified in descending priority order. Partitioning should be configured in order to use clustering.
+  type        = list(object({
+    table_id          = string,
+    schema            = string,
+    clustering        = list(string),
+    # Specifies column names to use for data clustering. Up to four top-level columns are allowed, and should be specified in descending priority order. Partitioning should be configured in order to use clustering.
     time_partitioning = object({
-      expiration_ms            = string, # The time when this table expires, in milliseconds since the epoch. If set to `null`, the table will persist indefinitely.
+      expiration_ms            = string,
+      # The time when this table expires, in milliseconds since the epoch. If set to `null`, the table will persist indefinitely.
       field                    = string,
       type                     = string,
       require_partition_filter = bool,
@@ -45,15 +47,17 @@ variable "lz_tables" {
 }
 
 
-variable "cr_tables" {
+variable "curated_tables" {
   description = "A list of maps that includes table_id, schema, clustering, time_partitioning, range_partitioning, view, expiration_time, labels in each element."
   default     = []
-  type = list(object({
-    table_id   = string,
-    schema     = string,
-    clustering = list(string),  # Specifies column names to use for data clustering. Up to four top-level columns are allowed, and should be specified in descending priority order. Partitioning should be configured in order to use clustering.
+  type        = list(object({
+    table_id          = string,
+    schema            = string,
+    clustering        = list(string),
+    # Specifies column names to use for data clustering. Up to four top-level columns are allowed, and should be specified in descending priority order. Partitioning should be configured in order to use clustering.
     time_partitioning = object({
-      expiration_ms            = string, # The time when this table expires, in milliseconds since the epoch. If set to `null`, the table will persist indefinitely.
+      expiration_ms            = string,
+      # The time when this table expires, in milliseconds since the epoch. If set to `null`, the table will persist indefinitely.
       field                    = string,
       type                     = string,
       require_partition_filter = bool,
@@ -71,10 +75,10 @@ variable "cr_tables" {
   }))
 }
 
-variable "cm_views" {
+variable "consumption_views" {
   description = "A list of objects which include table_id, which is view id, and view query"
   default     = []
-  type = list(object({
+  type        = list(object({
     view_id        = string,
     query          = string,
     table          = string,
@@ -83,15 +87,13 @@ variable "cm_views" {
   }))
 }
 
-variable "bq_bi_dataset" {
-  description = "The attributes for creating BI team datasets"
-  type = map(object({
-    region = string,
+variable "bq_consumers_datasets" {
+  description = "The attributes for creating consumer teams datasets"
+  type        = map(object({
     description = string,
-    domain_reader = string,
-    owner = string,
-    labels = map(string)
-  },))
+    iam_owners  = list(string),
+    labels      = map(string)
+  }, ))
   default = {}
 }
 
