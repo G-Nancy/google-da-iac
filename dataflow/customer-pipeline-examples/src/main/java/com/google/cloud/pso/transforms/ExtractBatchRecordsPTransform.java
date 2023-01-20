@@ -10,11 +10,11 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
 // "E" in ETL
-public class ExtractRecordsPTransform
+public class ExtractBatchRecordsPTransform
         extends PTransform<PBegin, PCollection<Customer>> {
 
     private String inputTableSpec;
-    public ExtractRecordsPTransform(String inputTableSpec){
+    public ExtractBatchRecordsPTransform(String inputTableSpec){
         this.inputTableSpec = inputTableSpec;
     }
 

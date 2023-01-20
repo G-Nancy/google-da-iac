@@ -17,34 +17,35 @@
  */
 package com.google.cloud.pso;
 
-import com.google.cloud.pso.model.BatchExampleOptions;
-import com.google.cloud.pso.model.Customer;
-import com.google.cloud.pso.model.CustomerWithScore;
-import com.google.cloud.pso.model.FailedRecord;
-import com.google.cloud.pso.transforms.ExtractRecordsPTransform;
-import com.google.cloud.pso.transforms.LoadFailedRecordsPTransform;
-import com.google.cloud.pso.transforms.LoadSuccessRecordsPTransform;
-import com.google.cloud.pso.transforms.TransformRecordsPTransform;
+import com.google.cloud.pso.model.*;
+import com.google.cloud.pso.transforms.*;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionTuple;
 
-public class BatchExamplePipeline {
+public class StreamingExamplePipeline {
 
-    static void run(BatchExampleOptions options) {
+    static void run(StreamingExampleOptions options) {
+
+        final String runId = options.getJobName();
 
         Pipeline p = Pipeline.create(options);
 
-        PCollection<Customer> extractedCustomers = p.
+        PCollectionTuple parsedCustomerResults = p.
                 apply("Extract",
-                new ExtractRecordsPTransform(options.getInputTable()));
+                        new ExtractStreamedRecordsPTransform(options.getInputSubscription(), runId));
+
+        PCollection<Customer> extractedCustomers = parsedCustomerResults.get(ExtractStreamedRecordsPTransform.successOutput);
+        PCollection<FailedRecord> extractionFailedRecords = parsedCustomerResults.get(ExtractStreamedRecordsPTransform.errorOutput);
 
         PCollectionTuple transformedCustomers = extractedCustomers
                 .apply("Transform", new TransformRecordsPTransform(
                         options.getCustomerScoringServiceUrl(),
-                        options.getJobName()
-                        ));
+                        runId
+                ));
 
         // here we load into two tables: success and error
         PCollection<CustomerWithScore> customersWithScore = transformedCustomers
@@ -52,18 +53,24 @@ public class BatchExamplePipeline {
 
         customersWithScore.apply("Load Success Records", new LoadSuccessRecordsPTransform(options.getOutputTable()));
 
-        PCollection<FailedRecord> customersWithErrors = transformedCustomers
+        PCollection<FailedRecord> transformationFiledRecords = transformedCustomers
                 .get(TransformRecordsPTransform.errorOutput);
 
-        customersWithErrors.apply("Load Error Records", new LoadFailedRecordsPTransform(options.getErrorTable()));
+        // Union failed records from the extraction and transformation steps
+        PCollection<FailedRecord> allFailedRecords = PCollectionList
+                .of(extractionFailedRecords)
+                .and(transformationFiledRecords)
+                .apply(Flatten.pCollections());
+
+        allFailedRecords.apply("Load Failed Records", new LoadFailedRecordsPTransform(options.getErrorTable()));
 
         p.run();
     }
 
     public static void main(String[] args) {
 
-        BatchExampleOptions options =
-                PipelineOptionsFactory.fromArgs(args).withValidation().as(BatchExampleOptions.class);
+        StreamingExampleOptions options =
+                PipelineOptionsFactory.fromArgs(args).withValidation().as(StreamingExampleOptions.class);
 
         run(options);
     }

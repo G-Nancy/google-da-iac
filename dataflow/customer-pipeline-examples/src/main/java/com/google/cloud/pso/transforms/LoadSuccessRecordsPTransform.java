@@ -31,7 +31,7 @@ public class LoadSuccessRecordsPTransform
                         BigQueryIO.writeTableRows()
                                 .to(targetTableSpec)
                                 .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_NEVER)
-                                .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
+                                .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND));
 
         return PDone.in(customersWithScore.getPipeline());
     }

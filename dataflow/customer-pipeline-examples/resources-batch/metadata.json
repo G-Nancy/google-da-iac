@@ -1,6 +1,6 @@
 {
-  "name": "BatchE",
-  "description": "Sample Beam batch pipeline for counting words",
+  "name": "BatchExample",
+  "description": "Sample Beam batch pipeline",
   "parameters": [
     {
       "name": "inputTable",

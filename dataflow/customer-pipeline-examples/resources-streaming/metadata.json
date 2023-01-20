@@ -1,0 +1,26 @@
+{
+  "name": "StreamingExample",
+  "description": "Sample Beam streaming pipeline",
+  "parameters": [
+    {
+      "name": "inputSubscription",
+      "label": "inputSubscription",
+      "helpText": "BigQuery table to read from in the format project.dataset.table"
+    },
+    {
+      "name": "outputTable",
+      "label": "outputTable",
+      "helpText": "BigQuery table to write to in the format project:dataset.table"
+    },
+    {
+      "name": "errorTable",
+      "label": "errorTable",
+      "helpText": "BigQuery table to write errors to in the format project:dataset.table"
+    },
+    {
+      "name": "customerScoringServiceUrl",
+      "label": "customerScoringServiceUrl",
+      "helpText": "Endpoint for Customer Scoring service"
+    }
+  ]
+}

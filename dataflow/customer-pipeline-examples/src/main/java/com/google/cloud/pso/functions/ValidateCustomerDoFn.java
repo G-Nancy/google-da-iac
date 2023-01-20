@@ -15,7 +15,7 @@ public class ValidateCustomerDoFn extends DoFn<Customer, Customer> {
     public void processElement(@Element Customer element, OutputReceiver<Customer> receiver) {
 
         // This is a naive validation logic to demonstrate functionality
-        if(element.getFirstName().startsWith("A")){
+        if(element.getFirstName().contains("#")){
             invalidCustomersCount.inc();
         }else{
 

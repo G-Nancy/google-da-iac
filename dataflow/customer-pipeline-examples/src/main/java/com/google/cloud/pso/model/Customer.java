@@ -66,6 +66,15 @@ public class Customer implements Serializable {
         return gson.toJson(this);
     }
 
+    public static Customer fromJsonString(String jsonStr){
+        Gson gson = new GsonBuilder()
+                .setPrettyPrinting()
+                .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
+                .create();
+
+        return gson.fromJson(jsonStr, Customer.class);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

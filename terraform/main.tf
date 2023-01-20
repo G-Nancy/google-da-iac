@@ -156,3 +156,11 @@ module "cloud-run-customer-scoring" {
     }
   ]
 }
+
+module "pubsub" {
+  source = "./modules/pubsub"
+  project = var.project
+  customer_data_topic_name = "customer-topic"
+  customer_data_subscription_name = "customer-pull-sub"
+  customer_data_subscription_readers = [module.iam.sa_dataflow_runner_email]
+}

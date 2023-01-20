@@ -122,15 +122,35 @@ Set and export the following variables:
 
 ```shell
 export PIPELINE_NAME=batch-example-java
-export POM_PATH="dataflow/batch/dataflow-batch-example-java/pom.xml"
-export FLEX_DOCKER_PATH="dataflow/batch/dataflow-batch-example-java/Dockerfile"
-export FLEX_META_DATA_PATH="dataflow/batch/dataflow-batch-example-java/metadata.json"
-export JAVA_JAR="dataflow/batch/dataflow-batch-example-java/target/dataflow-batch-example-java-bundled-1.0.jar"
+export POM_PATH="dataflow/customer-pipeline-examples/pom.xml"
+export FLEX_DOCKER_PATH="dataflow/customer-pipeline-examples/resources-batch/Dockerfile"
+export FLEX_META_DATA_PATH="dataflow/customer-pipeline-examples/resources-batch/metadata.json"
+export JAVA_JAR="dataflow/customer-pipeline-examples/target/customer-pipeline-examples-bundled-1.0.jar"
 export JAVA_MAIN_CLASS="com.google.cloud.pso.BatchExamplePipeline"
 export IMAGE_BUILD_VERSION=1.0
 export FLEX_TEMPLATE_PATH=gs://${PROJECT_ID}-dataflow/flex-templates/${PIPELINE_NAME}/${PIPELINE_NAME}-metadata.json
 ```
   
+Run the deployment script
+```shell
+. scripts/deploy_dataflow_flex_template.sh 
+```
+
+#### Deploy Dataflow Streaming Job(s)
+
+Set and export the following variables:
+
+```shell
+export PIPELINE_NAME=streaming-example-java
+export POM_PATH="dataflow/customer-pipeline-examples/pom.xml"
+export FLEX_DOCKER_PATH="dataflow/customer-pipeline-examples/resources-streaming/Dockerfile"
+export FLEX_META_DATA_PATH="dataflow/customer-pipeline-examples/resources-streaming/metadata.json"
+export JAVA_JAR="dataflow/customer-pipeline-examples/target/customer-pipeline-examples-bundled-1.0.jar"
+export JAVA_MAIN_CLASS="com.google.cloud.pso.StreamingExamplePipeline"
+export IMAGE_BUILD_VERSION=1.0
+export FLEX_TEMPLATE_PATH=gs://${PROJECT_ID}-dataflow/flex-templates/${PIPELINE_NAME}/${PIPELINE_NAME}-metadata.json
+```
+
 Run the deployment script
 ```shell
 . scripts/deploy_dataflow_flex_template.sh 
@@ -147,7 +167,9 @@ export DATA_BUCKET_CUSTOMERS=${PROJECT_ID}-customer-data
 . scripts/deploy_composer_artifacts.sh
 ```
 
-# Testing the Pipeline
+# Testing
+
+## Testing the Batch Pipeline
 
 Create sample test data on GCS
 ```shell
@@ -157,6 +179,59 @@ DATA_BUCKET_CUSTOMERS=${PROJECT_ID}-customer-data
 ```
 Run the customer ingestion DAG from the Airflow UI
 
+
+## Testing Dataflow Streaming Job
+
+To run the `dataflow-streaming-example-java` job via the deployed Flex-Template:
+
+Set and export these additional variables:
+```shell
+export PIPELINE_NAME=streaming-example-java
+export FLEX_TEMPLATE_PATH=gs://${PROJECT_ID}-dataflow/flex-templates/${PIPELINE_NAME}/${PIPELINE_NAME}-metadata.json
+export DATAFLOW_BUCKET=${PROJECT_ID}-dataflow
+export JOB_PARAM_INPUT_SUBSCRIPTION=projects/$PROJECT_ID/subscriptions/customer-pull-sub
+export JOB_PARAM_OUTPUT_TABLE=curated.customer_score
+export JOB_PARAM_ERROR_TABLE=curated.failed_record_processing
+export JOB_PARAM_SERVICE_URL="<customer scoring service deployed by Terraform>/api/customer/score"
+export JOB_WORKER_TYPE=n2-standard-2
+export JOB_WORKERS_COUNT=1
+export DATAFLOW_SERVICE_ACCOUNT_EMAIL=dataflow-sa@${PROJECT_ID}.iam.gserviceaccount.com
+```
+
+Run the following command
+```shell
+RUN_ID=`date +%Y%m%d-%H%M%S`
+gcloud dataflow flex-template run "${PIPELINE_NAME}-flex-${RUN_ID}" \
+    --enable-streaming-engine \
+    --template-file-gcs-location ${FLEX_TEMPLATE_PATH} \
+    --parameters inputSubscription=${JOB_PARAM_INPUT_SUBSCRIPTION} \
+    --parameters outputTable=${JOB_PARAM_OUTPUT_TABLE} \
+    --parameters errorTable=${JOB_PARAM_ERROR_TABLE} \
+    --parameters customerScoringServiceUrl=${JOB_PARAM_SERVICE_URL} \
+    --temp-location "gs://${DATAFLOW_BUCKET}/runs/${PIPELINE_NAME}/${RUN_ID}/temp/" \
+    --staging-location "gs://${DATAFLOW_BUCKET}/runs/${PIPELINE_NAME}/${RUN_ID}/stg/" \
+    --worker-machine-type ${JOB_WORKER_TYPE} \
+    --region ${COMPUTE_REGION} \
+    --num-workers ${JOB_WORKERS_COUNT} \
+    --disable-public-ips \
+    --service-account-email=${DATAFLOW_SERVICE_ACCOUNT_EMAIL}
+```
+
+Publish sample data to the topic:
+```shell
+export TOPIC_ID=projects/$PROJECT_ID/topics/customer-topic
+
+. scripts/publish_sample_data.sh
+```
+
+Cancel the pipeline:
+```shell
+gcloud dataflow jobs cancel JOB_ID --region=${COMPUTE_REGION}
+```
+
+PS: One can find the JOB_ID in the output of `gcloud dataflow jobs run` command
+
+
 # Dataflow
 
 ## Run Dataflow Batch Job
@@ -165,29 +240,31 @@ To run the `dataflow-batch-example-java` job via the deployed Flex-Template:
 
 Set and export these additional variables:
 ```shell
+export PIPELINE_NAME=batch-example-java
+export FLEX_TEMPLATE_PATH=gs://${PROJECT_ID}-dataflow/flex-templates/${PIPELINE_NAME}/${PIPELINE_NAME}-metadata.json
 export DATAFLOW_BUCKET=<dataflow resourses bucket created by terraform>
-export JOB_PARAM_INPUT_TABLE=<dataset.table>
-export JOB_PARAM_OUTPUT_TABLE=<dataset.table>
-export JOB_PARAM_ERROR_TABLE=<dataset.table>
-export JOB_PARAM_SERVICE_URL=<customer scoring service deployed by Terraform>
+export JOB_PARAM_INPUT_TABLE=curated.customer
+export JOB_PARAM_OUTPUT_TABLE=curated.customer_score
+export JOB_PARAM_ERROR_TABLE=curated.failed_record_processing
+export JOB_PARAM_SERVICE_URL="<customer scoring service deployed by Terraform>/api/customer/score"
 export JOB_WORKER_TYPE=n2-standard-2
 export JOB_WORKERS_COUNT=1
-export DATAFLOW_SERVICE_ACCOUNT_EMAIL=<dataflow sa deployed by Terraform>
+export DATAFLOW_SERVICE_ACCOUNT_EMAIL=dataflow-sa@${PROJECT_ID}.iam.gserviceaccount.com
 ```
 
 Run the following command
 ```shell
 RUN_ID=`date +%Y%m%d-%H%M%S`
-gcloud dataflow flex-template run "batch-example-flex-${RUN_ID}" \
+gcloud dataflow flex-template run "${PIPELINE_NAME}-flex-${RUN_ID}" \
     --template-file-gcs-location ${FLEX_TEMPLATE_PATH} \
     --parameters inputTable=${JOB_PARAM_INPUT_TABLE} \
     --parameters outputTable=${JOB_PARAM_OUTPUT_TABLE} \
     --parameters errorTable=${JOB_PARAM_ERROR_TABLE} \
     --parameters customerScoringServiceUrl=${JOB_PARAM_SERVICE_URL} \
-    --temp-location "gs://${DATAFLOW_BUCKET}/runs/batch-example-java/${RUN_ID}/temp/" \
-    --staging-location "gs://${DATAFLOW_BUCKET}/runs/batch-example-java/${RUN_ID}/stg/" \
+    --temp-location "gs://${DATAFLOW_BUCKET}/runs/${PIPELINE_NAME}/${RUN_ID}/temp/" \
+    --staging-location "gs://${DATAFLOW_BUCKET}/runs/{${PIPELINE_NAME}/${RUN_ID}/stg/" \
     --worker-machine-type ${JOB_WORKER_TYPE} \
-    --region ${REGION} \
+    --region ${COMPUTE_REGION} \
     --num-workers ${JOB_WORKERS_COUNT} \
     --disable-public-ips \
     --service-account-email=${DATAFLOW_SERVICE_ACCOUNT_EMAIL}
