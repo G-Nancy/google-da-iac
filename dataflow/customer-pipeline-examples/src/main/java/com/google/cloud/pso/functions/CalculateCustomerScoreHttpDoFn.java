@@ -128,11 +128,6 @@ public class CalculateCustomerScoreHttpDoFn extends DoFn<Customer, CustomerWithS
                     request,
                     HttpResponse.BodyHandlers.ofString());
 
-//            HttpResponse<String> response = HttpHelper.post(
-//                    this.serviceUrl,
-//                    element
-//            );
-
             if(response.statusCode() == HttpStatusCodes.STATUS_CODE_OK){
 
                 out.get(successOutput).output(
