@@ -13,6 +13,7 @@ import os
 import airflow_helpers
 import functools
 from airflow.providers.google.cloud.transfers.gcs_to_gcs import GCSToGCSOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
 
 # variables that we get from the Composer environment
 env = os.environ.get('env')  # Airflow variable, with possible values 'dev', 'int' and 'prd'. Some Python variables
@@ -20,7 +21,7 @@ project = os.environ.get('project')
 dataflow_flex_template_spec = os.environ.get('customer_dataflow_flex_template_spec')
 dataflow_temp_bucket = os.environ.get('dataflow_temp_bucket')
 dataflow_service_account_email = os.environ.get('dataflow_service_account_email')
-dataflow_region = os.environ.get('dataflow_region')
+compute_region = os.environ.get('compute_region')
 bq_landing_dataset = os.environ.get('bq_landing_dataset')
 bq_curated_dataset = os.environ.get('bq_curated_dataset')
 customer_scoring_url = os.environ.get('customer_scoring_url')
@@ -37,6 +38,7 @@ bq_customer_history_table = f'{project}.{bq_curated_dataset}.customer'
 # bq table where we keep history of all customers after updating them with the new batch
 bq_customer_score_table = f'{project}.{bq_curated_dataset}.customer_score'
 bq_error_table = f'{project}.{bq_curated_dataset}.failed_customer_processing'
+dag_run_id = '{{ dag_run.logical_date | ts_nodash | lower }}'
 
 default_args = {
     'start_date': days_ago(2),
@@ -51,7 +53,9 @@ dag = DAG(
     'data-ingestion-customer',
     default_args=default_args,
     description='Example DAG for ingesting customer data from GCS to BigQuery.',
-    schedule_interval=timedelta(minutes=60),
+    #TODO: set the desired frequency for the dag
+    # schedule_interval=timedelta(minutes=60),
+    schedule_interval=None,
     dagrun_timeout=timedelta(minutes=30),
     catchup=False,
     concurrency=1,  # number of parallel operators/tasks that can run in this DAG.
@@ -91,19 +95,28 @@ check_files_in_processing_zone = BranchPythonOperator(
 )
 
 # If data files are there to process, load them to BigQuery stg table
-load_data_to_stg_bigquery = gcs_to_bq.GoogleCloudStorageToBigQueryOperator(
+load_data_to_stg_bigquery = GCSToBigQueryOperator(
     task_id='load-data-to-stg-bigquery',
     bucket=f'{data_bucket}',
-    source_objects=[f'{processing_folder}/sample_customers.csv'],
+    source_objects=[f'{processing_folder}/'],
     source_format='CSV',
     compression='NONE',
     field_delimiter=',',
-    skip_leading_rows=1,
+    skip_leading_rows=0,
     destination_project_dataset_table=bq_customer_stg_table,
     write_disposition='WRITE_TRUNCATE',
-    create_disposition="CREATE_IF_NEEDED",
+    create_disposition="CREATE_NEVER",
     # schema file has to be in the same bucket as the data files. The schema file is deployed in the CICD pipeline.
-    schema_object='schema/customer_stg.json',
+    # schema_object='schema/customer_stg.json', # required if create_disposition is to create the table. In this POC the table is created by Terraform
+    # schema_fields is required when the input CSV doesn't have column headers
+    schema_fields=[
+        {"name": "id", "type": "INTEGER", "mode": "NULLABLE"},
+        {"name": "first_name", "type": "STRING", "mode": "NULLABLE"},
+        {"name": "last_name", "type": "STRING", "mode": "NULLABLE"},
+        {"name": "date_of_birth", "type": "DATE", "mode": "NULLABLE"},
+        {"name": "address", "type": "STRING", "mode": "NULLABLE"}
+    ],
+    autodetect=False,
     dag=dag
 )
 
@@ -123,7 +136,8 @@ move_files_from_processing_to_archive = GCSToGCSOperator(
     source_bucket=f'{data_bucket}',
     source_object=f'{processing_folder}/',
     destination_bucket=f'{data_bucket}',
-    destination_object=f'{archive_folder}/',
+    # source files might have the same name across imports, so we archive them in folders based on the run_id
+    destination_object=f'{archive_folder}/{dag_run_id}/',
     move_object=True,
     dag=dag
 )
@@ -160,11 +174,11 @@ calculate_scores_dataflow = DataflowStartFlexTemplateOperator(
                 "numWorkers": 1,
                 "maxWorkers": 1,
                 "machineType": "n2-standard-4",
-                "workerRegion": dataflow_region
+                "workerRegion": compute_region
             },
         }
     },
-    location=dataflow_region,
+    location=compute_region,
     wait_until_finished=True,
     do_xcom_push=False,  # Default is True. Set to false because it might fail with large xcom data, and we are not using it
     dag=dag

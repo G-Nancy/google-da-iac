@@ -158,6 +158,59 @@ Run the deployment script
 
 Repeat the process to deploy newly added jobs
 
+#### Deploy Dataproc Dependencies
+
+Using Sqoop on Dataproc to import data from the source database requires some
+jars as dependencies. We need to deploy these jars as follows:
+
+```shell
+gsutil cp dataproc/jars/*.jar gs://${PROJECT_ID}-resources/dataproc/jars/
+```
+
+#### Deploy MySql Instance (mock for Oracle)
+
+For this POC, we will use a MySql instance hosted on GCP to import data from while demonstrating the end-to-end data
+pipeline. This deployment step could be skipped if the pipeline will be adjusted to read from another source system (e.g. Oracle).
+
+In Cloud Shell, run the following commands: 
+
+Create a SQL Instance (MySql)
+```shell
+export MYSQL_INSTANCE_NAME=mysql-instance
+export MY_SQL_ROOT_PASSWORD=<root password>
+
+gcloud sql instances create $MYSQL_INSTANCE_NAME \
+--tier="db-f1-micro" \
+--region=$COMPUTE_REGION
+
+gcloud sql users set-password root \
+--host=% \
+--instance $MYSQL_INSTANCE_NAME \
+--password $MY_SQL_ROOT_PASSWORD
+```
+
+Create a file with the same root password on GCS to be used to connect to the instance
+```shell
+printf "${MY_SQL_ROOT_PASSWORD}" > login.txt
+
+gsutil cp login.txt gs://${PROJECT_ID}-resources/mysql/login.txt
+```
+
+Connect to the instance and create sample data for testing the pipeline
+
+```shell
+gcloud sql connect $MYSQL_INSTANCE_NAME --user=root
+
+CREATE DATABASE customers;
+USE customers;
+
+CREATE TABLE customer (id INTEGER NOT NULL PRIMARY KEY, first_name VARCHAR(255), last_name VARCHAR(255), date_of_birth VARCHAR(255), address VARCHAR(255));
+INSERT INTO customer (id, first_name, last_name, date_of_birth, address) values (1, "Luke", "Skywalker", "2140-01-01", "Polis Massa");
+INSERT INTO customer (id, first_name, last_name, date_of_birth, address) values (2, "Leia", "Organa", "2140-01-01", "Polis Massa");
+
+exit
+```
+
 #### Deploy Composer Artifacts
 
 ```shell
@@ -171,14 +224,19 @@ export DATA_BUCKET_CUSTOMERS=${PROJECT_ID}-customer-data
 
 ## Testing the Batch Pipeline
 
-Create sample test data on GCS
+In this POC, there are two ways to import data to GCS and from there move it to BigQuery:
+1) By running the `data_import_customer` DAG from the Airflow UI. This will import
+   sample data from the MySql database via Sqoop on Dataproc
+2) By running the below script to copy sample data
+
 ```shell
 DATA_BUCKET_CUSTOMERS=${PROJECT_ID}-customer-data
 
 . scripts/deploy_sample_data.sh
 ```
-Run the customer ingestion DAG from the Airflow UI
 
+After the data is on GCS, run the `data_ingestion_customer` DAG from the Airflow UI
+to upsert (merge) it to BigQuery and run the sample transformation steps. 
 
 ## Testing Dataflow Streaming Job
 
