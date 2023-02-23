@@ -24,7 +24,7 @@
 
 cd terraform
 
-echo "impersonate_service_account will be ${TF_SA}@${PROJECT_ID}.iam.gserviceaccount.com at storage bucket ${BUCKET}"
+echo "impersonate_service_account will be ${TF_SA}@${PROJECT_ID}.iam.gserviceaccount.com at storage bucket ${TF_BUCKET}"
 
 terraform init \
     -backend-config="bucket=${TF_BUCKET}" \

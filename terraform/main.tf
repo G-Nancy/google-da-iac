@@ -62,15 +62,16 @@ module "bigquery" {
   deletion_protection   = var.deletion_protection
 }
 
-module "spanner" {
-  source                    = "./modules/spanner"
-  project                   = var.project
-  region                    = var.compute_region
-  spanner_instance          = var.spanner_instance_name
-  spanner_node_count        = var.spanner_node_count
-  spanner_db_retention_days = var.spanner_db_retention_days
-  spanner_labels            = var.spanner_labels
-}
+# TODO: uncomment this if you want to deploy a Spanner instance. However, note that it can incur significant cost if left unused
+#module "spanner" {
+#  source                    = "./modules/spanner"
+#  project                   = var.project
+#  region                    = var.compute_region
+#  spanner_instance          = var.spanner_instance_name
+#  spanner_node_count        = var.spanner_node_count
+#  spanner_db_retention_days = var.spanner_db_retention_days
+#  spanner_labels            = var.spanner_labels
+#}
 
 module "composer" {
   source                         = "./modules/composer"
@@ -78,7 +79,7 @@ module "composer" {
   composer_name                  = var.composer_name
   project                        = var.project
   region                         = var.compute_region
-  zone                           = var.composer_zone
+  zone                           = var.compute_zone
   orch_network                   = var.network_name
   orch_subnetwork                = var.subnetwork_name
   #  composer_master_ipv4_cidr_block = var.composer_master_ipv4_cidr_block
@@ -89,9 +90,10 @@ module "composer" {
     customer_dataflow_flex_template_spec = var.customer_dataflow_flex_template_spec
     dataflow_temp_bucket                 = module.gcs.dataflow_bucket_name
     dataflow_service_account_email       = module.iam.sa_dataflow_runner_email
-    bq_curated_dataset = module.bigquery.curated_dataset_id
-    bq_landing_dataset = module.bigquery.landing_dataset_id
-    dataflow_region                      = var.compute_region
+    bq_curated_dataset                   = module.bigquery.curated_dataset_id
+    bq_landing_dataset                   = module.bigquery.landing_dataset_id
+    compute_region                       = var.compute_region
+    compute_zone                         = var.compute_zone
     last_version                         = var.deployment_version
     customer_scoring_url                 = "${module.cloud-run-customer-scoring.service_endpoint}/api/customer/score"
   }
@@ -116,11 +118,11 @@ module "docker_artifact_registry" {
 }
 
 module "iam" {
-  source                          = "./modules/iam"
-  project                         = var.project
-  dataflow_sa_name                = var.dataflow_sa_name #Dataflow service account
-  cloudrun_sa_name                = var.cloudrun_sa_name #Cloud Run service account
-  composer_sa_name                = var.composer_sa_name #Composer service account
+  source           = "./modules/iam"
+  project          = var.project
+  dataflow_sa_name = var.dataflow_sa_name #Dataflow service account
+  cloudrun_sa_name = var.cloudrun_sa_name #Cloud Run service account
+  composer_sa_name = var.composer_sa_name #Composer service account
 }
 
 module "data-catalog" {
@@ -158,9 +160,9 @@ module "cloud-run-customer-scoring" {
 }
 
 module "pubsub" {
-  source = "./modules/pubsub"
-  project = var.project
-  customer_data_topic_name = "customer-topic"
-  customer_data_subscription_name = "customer-pull-sub"
+  source                             = "./modules/pubsub"
+  project                            = var.project
+  customer_data_topic_name           = "customer-topic"
+  customer_data_subscription_name    = "customer-pull-sub"
   customer_data_subscription_readers = [module.iam.sa_dataflow_runner_email]
 }

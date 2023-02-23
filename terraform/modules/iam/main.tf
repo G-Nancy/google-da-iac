@@ -16,7 +16,8 @@ locals {
     "roles/bigquery.dataEditor",
     "roles/bigquery.jobUser",
     "roles/dataflow.admin",
-    "roles/iam.serviceAccountUser"
+    "roles/iam.serviceAccountUser",
+    "roles/dataproc.editor"
   ]
 }
 

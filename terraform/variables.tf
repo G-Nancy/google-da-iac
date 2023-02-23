@@ -30,7 +30,7 @@ variable "compute_region" {
   type = string
 }
 
-variable "composer_zone" {
+variable "compute_zone" {
   type = string
 }
 
@@ -294,6 +294,13 @@ variable "gcs_buckets" {
 
   default = {
     "customer-data" = {
+      uniform_bucket_level_access = "true"
+      labels                      = {
+        owner = "platform"
+        created_by = "terraform"
+      }
+    },
+    "resources" = {
       uniform_bucket_level_access = "true"
       labels                      = {
         owner = "platform"
