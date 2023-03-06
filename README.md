@@ -99,6 +99,8 @@ Both ways, one must set the below variables:
 deployment_version = "<major.minor> (this should be automated by the CICD pipeline)"
 project = "<GCP project ID to deploy solution to (equals to $PROJECT_ID) >"
 compute_region = "<GCP region to deploy compute resources e.g. cloud run, iam, etc (equals to $COMPUTE_REGION)>"
+compute_zone = "<GCP zone to deploy compute resources e.g. cloud run, iam, etc (e.g. europe-west3-a)>"
+environment_level = "equals to the environment where repsources are deployed"
 data_region = "<GCP region to deploy data resources (buckets, datasets, tag templates, etc> (equals to $DATA_REGION)"
 terraform_service_account = " equals to ${TF_SA}@${PROJECT_ID}.iam.gserviceaccount.com"
 artifact_repo_name = "equals to ${DOCKER_REPOSITORY_NAME}"
