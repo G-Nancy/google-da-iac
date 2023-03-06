@@ -1,6 +1,5 @@
 package com.google.cloud.pso;
 
-import com.google.api.services.bigquery.model.TableRow;
 import com.google.common.base.Objects;
 import java.io.Serializable;
 import java.time.LocalDate;
