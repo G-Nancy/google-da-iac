@@ -34,16 +34,11 @@
         <java.version>11</java.version>
     </properties>
     <dependencies>
+
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>31.1-jre</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.apis</groupId>
-            <artifactId>google-api-services-bigquery</artifactId>
-            <version>v2-rev459-1.25.0</version>
         </dependency>
 
         <dependency>
