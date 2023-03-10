@@ -47,6 +47,9 @@ gcloud services enable storage.googleapis.com
 echo "enabling run .."
 gcloud services enable run.googleapis.com
 
+echo "enabling dataproc .."
+gcloud services enable dataproc.googleapis.com
+
 #echo "enabling cloudbuild .."
 #gcloud services enable cloudbuild.googleapis.com
 #
