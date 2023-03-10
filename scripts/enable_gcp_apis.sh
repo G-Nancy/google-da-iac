@@ -38,6 +38,9 @@ gcloud services enable composer.googleapis.com
 echo "enabling datacatalog .."
 gcloud services enable datacatalog.googleapis.com
 
+echo "enabling dataproc .."
+gcloud services enable dataproc.googleapis.com
+
 echo "enabling bigquery .."
 gcloud services enable bigquery.googleapis.com
 
