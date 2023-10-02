@@ -1,5 +1,5 @@
-# erste-digital-poc
-Google PSO POC project for Erste Digital - for internal collaboration
+# Google-DA-Demo
+Google PSO POC project for data analytics demonstration
 
 # Deployment
 
